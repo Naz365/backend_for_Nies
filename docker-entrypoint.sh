@@ -18,29 +18,31 @@ FILESYSTEM_DISK=public
 EOT
 fi
 
-# Ensure SQLite database directory & file exists with full permissions
+# Ensure SQLite database directory & file exists
 mkdir -p /var/www/html/database
 touch /var/www/html/database/database.sqlite
-chmod -R 777 /var/www/html/database
 
-# Ensure storage and bootstrap cache directories exist with full permissions
+# Ensure storage and bootstrap cache directories exist
 mkdir -p /var/www/html/storage/framework/views \
          /var/www/html/storage/framework/sessions \
          /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/logs \
          /var/www/html/bootstrap/cache
-chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Run database migrations and seeding explicitly
-echo "Running Artisan Database Migrations & Seeders..."
-php artisan migrate:fresh --seed --force
-php artisan filament:assets
-php artisan storage:link || true
-php artisan config:clear
-php artisan route:clear
+# Remove any stale bootstrap cache files
+rm -f /var/www/html/bootstrap/cache/*.php
 
-# Fix ownership for Apache www-data user
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
+# Grant full permissions and www-data ownership to the whole web tree
+chown -R www-data:www-data /var/www/html
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
+
+# Run artisan setup as www-data user
+su -s /bin/bash www-data -c "php artisan migrate:fresh --seed --force" || true
+su -s /bin/bash www-data -c "php artisan filament:assets" || true
+su -s /bin/bash www-data -c "php artisan storage:link" || true
+
+# Re-grant permissions
+chown -R www-data:www-data /var/www/html
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
 
 echo "Setup completed successfully. Starting Apache web server..."

@@ -7,6 +7,10 @@ use App\Http\Controllers\Api\BlogPostController;
 use App\Http\Controllers\Api\SiteSettingController;
 use App\Http\Controllers\Api\ContactController;
 
+Route::get('/ping', function () {
+    return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
+});
+
 Route::prefix('v1')->group(function () {
     // Read-only API endpoints for static site generation & public frontend
     Route::get('/projects', [ProjectController::class, 'index']);
