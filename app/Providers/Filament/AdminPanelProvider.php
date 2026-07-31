@@ -3,7 +3,6 @@
 namespace App\Providers\Filament;
 
 use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
@@ -17,7 +16,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\Navigation\MenuItem;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -29,24 +27,17 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => '#E53E3E', // Flame Red
-                'secondary' => '#0A192F', // Navy Blue
+                'primary' => '#E53E3E',
+                'secondary' => '#0A192F',
                 'gray' => Color::Gray,
             ])
             ->brandName('N.I. Engineering Services CMS')
-            ->brandLogo('/wp-content/uploads/2017/11/ni_logo-1.png')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->pages([
                 Pages\Dashboard::class,
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
-            ])
-            ->userMenuItems([
-                MenuItem::make()
-                    ->label('Deploy Static Frontend')
-                    ->url('/admin/deploy')
-                    ->icon('heroicon-o-cloud-arrow-up'),
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -56,7 +47,6 @@ class AdminPanelProvider extends PanelProvider
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
-                DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
