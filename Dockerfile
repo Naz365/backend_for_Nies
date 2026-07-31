@@ -27,9 +27,10 @@ COPY . /var/www/html
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# Create storage and cache directories and fix permissions
-RUN mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache/data storage/logs bootstrap/cache \
-    && chmod -R 777 storage bootstrap/cache
+# Create storage and cache directories and fix ownership
+RUN mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache/data storage/logs bootstrap/cache database \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 storage bootstrap/cache database
 
 # Make docker-entrypoint executable
 RUN chmod +x /var/www/html/docker-entrypoint.sh

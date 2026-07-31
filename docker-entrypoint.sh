@@ -16,22 +16,29 @@ if [ ! -f /var/www/html/database/database.sqlite ]; then
     touch /var/www/html/database/database.sqlite
 fi
 
-# Ensure bootstrap cache and storage permissions
-mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache/data storage/logs bootstrap/cache
-chmod -R 777 storage bootstrap/cache database
+# Ensure storage and bootstrap cache directories exist
+mkdir -p /var/www/html/storage/framework/views \
+         /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/framework/cache/data \
+         /var/www/html/storage/logs \
+         /var/www/html/bootstrap/cache
 
-# Ensure APP_KEY is present
+# Fix ownership and permissions for Apache www-data user
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
+
+# Set fallback APP_KEY if missing
 if [ -z "$APP_KEY" ]; then
     export APP_KEY="base64:uJ3n1jO8g+d4zW1V8q5b9A2k4L6m8N0P2q4R6S8T0U="
 fi
 
-# Run artisan setup commands at runtime
-php artisan key:generate --force || true
-php artisan migrate:fresh --seed --force || true
-php artisan filament:assets || true
-php artisan storage:link || true
-php artisan config:clear || true
-php artisan route:clear || true
+# Run artisan commands with www-data permissions
+su -s /bin/bash www-data -c "php artisan key:generate --force" || true
+su -s /bin/bash www-data -c "php artisan migrate:fresh --seed --force" || true
+su -s /bin/bash www-data -c "php artisan filament:assets" || true
+su -s /bin/bash www-data -c "php artisan storage:link" || true
+su -s /bin/bash www-data -c "php artisan config:clear" || true
+su -s /bin/bash www-data -c "php artisan route:clear" || true
 
 # Execute main process (Apache)
 exec "$@"
