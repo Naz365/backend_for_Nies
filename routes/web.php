@@ -6,19 +6,18 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
-Route::get('/simple-web-test', function () {
+Route::get('/test-render-login', function () {
     try {
-        return response()->json([
-            'status' => 'ok',
-            'session_id' => session()->getId(),
-            'app_key_exists' => !empty(config('app.key'))
-        ]);
+        $view = view('filament-panels::pages.auth.login')->render();
+        return response($view);
     } catch (\Throwable $e) {
         return response()->json([
             'status' => 'error',
+            'exception_class' => get_class($e),
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
-            'line' => $e->getLine()
+            'line' => $e->getLine(),
+            'trace' => substr($e->getTraceAsString(), 0, 1500)
         ]);
     }
 });
