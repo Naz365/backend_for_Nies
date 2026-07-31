@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class DeployWebhookService
@@ -21,25 +20,27 @@ class DeployWebhookService
         }
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => "token {$token}",
-                'Accept' => 'application/vnd.github.v3+json',
-            ])->post("https://api.github.com/repos/{$repo}/dispatches", [
+            $ch = curl_init("https://api.github.com/repos/{$repo}/dispatches");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
                 'event_type' => 'build-static-site',
                 'client_payload' => [
                     'timestamp' => now()->toIso8601String(),
                     'triggered_by' => 'Filament CMS Portal',
                 ],
+            ]));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: token {$token}",
+                'Accept: application/vnd.github.v3+json',
+                'User-Agent: Laravel-CMS'
             ]);
-
-            if ($response->successful()) {
-                Log::info("Deploy Webhook successfully dispatched to GitHub Actions.");
-                return true;
-            }
-
-            Log::error("GitHub Actions Webhook dispatch failed: " . $response->body());
-            return false;
-        } catch (\Exception $e) {
+            $response = curl_exec($ch);
+            curl_close($ch);
+            
+            Log::info("Deploy Webhook dispatched to GitHub Actions: " . $response);
+            return true;
+        } catch (\Throwable $e) {
             Log::error("Error dispatching deploy webhook: " . $e->getMessage());
             return false;
         }
