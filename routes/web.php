@@ -6,14 +6,14 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
-Route::get('/test-render-login', function () {
+Route::get('/admin-login-debug', function () {
     try {
-        $view = view('filament-panels::pages.auth.login')->render();
-        return response($view);
+        $response = app(\Filament\Http\Responses\Auth\LoginResponse::class);
+        return $response->toResponse(request());
     } catch (\Throwable $e) {
         return response()->json([
             'status' => 'error',
-            'exception_class' => get_class($e),
+            'exception' => get_class($e),
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
