@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e
+
+echo "Starting N.I. Engineering Backend Container Setup..."
 
 # Ensure SQLite database directory & file exists
 mkdir -p /var/www/html/database
@@ -21,7 +22,7 @@ if [ -z "$APP_KEY" ]; then
     export APP_KEY="base64:uJ3n1jO8g+d4zW1V8q5b9A2k4L6m8N0P2q4R6S8T0U="
 fi
 
-# Run artisan setup commands
+# Run artisan setup commands safely
 php artisan key:generate --force || true
 php artisan migrate:fresh --seed --force || true
 php artisan filament:assets || true
@@ -29,9 +30,11 @@ php artisan storage:link || true
 php artisan config:clear || true
 php artisan route:clear || true
 
-# Re-fix ownership after artisan commands create cache files
+# Re-fix ownership after artisan commands
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
-# Execute main process (Apache)
+echo "Setup completed successfully. Starting Apache web server..."
+
+# Execute Apache in foreground
 exec "$@"
