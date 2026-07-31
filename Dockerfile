@@ -13,12 +13,15 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Configure Apache DocumentRoot & Directory AllowOverride All
+# Configure Apache DocumentRoot & Directory AllowOverride All & FallbackResource
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/conf-available/*.conf
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/sites-available/000-default.conf
+
+# Add FallbackResource /index.php to 000-default.conf
+RUN sed -i '/<\/VirtualHost>/i \    <Directory /var/www/html/public>\n        Options Indexes FollowSymLinks\n        AllowOverride All\n        Require all granted\n        FallbackResource /index.php\n    </Directory>' /etc/apache2/sites-available/000-default.conf
 
 WORKDIR /var/www/html
 
