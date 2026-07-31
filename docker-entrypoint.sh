@@ -13,8 +13,8 @@ APP_URL=https://ni-engineering-backend.onrender.com
 LOG_CHANNEL=stderr
 DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
-CACHE_STORE=file
-SESSION_DRIVER=file
+CACHE_STORE=array
+SESSION_DRIVER=array
 FILESYSTEM_DISK=public
 EOT
 fi
