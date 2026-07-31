@@ -2,6 +2,22 @@
 
 echo "Starting N.I. Engineering Backend Container Setup..."
 
+# Ensure .env file exists with default production variables
+if [ ! -f /var/www/html/.env ]; then
+    cat <<EOT > /var/www/html/.env
+APP_NAME="N.I. Engineering Services CMS"
+APP_ENV=production
+APP_KEY=base64:uJ3n1jO8g+d4zW1V8q5b9A2k4L6m8N0P2q4R6S8T0U=
+APP_DEBUG=true
+APP_URL=https://ni-engineering-backend.onrender.com
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite
+CACHE_STORE=file
+SESSION_DRIVER=file
+FILESYSTEM_DISK=public
+EOT
+fi
+
 # Ensure SQLite database directory & file exists
 mkdir -p /var/www/html/database
 touch /var/www/html/database/database.sqlite
@@ -14,16 +30,10 @@ mkdir -p /var/www/html/storage/framework/views \
          /var/www/html/bootstrap/cache
 
 # Fix ownership and permissions for Apache www-data user
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
-chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
-
-# Ensure APP_KEY is present
-if [ -z "$APP_KEY" ]; then
-    export APP_KEY="base64:uJ3n1jO8g+d4zW1V8q5b9A2k4L6m8N0P2q4R6S8T0U="
-fi
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
 
 # Run artisan setup commands safely
-php artisan key:generate --force || true
 php artisan migrate:fresh --seed --force || true
 php artisan filament:assets || true
 php artisan storage:link || true
