@@ -36,11 +36,9 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('N.I. Engineering Services CMS')
             ->brandLogo('/wp-content/uploads/2017/11/ni_logo-1.png')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
             ])
