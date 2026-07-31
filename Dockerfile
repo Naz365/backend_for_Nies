@@ -31,11 +31,10 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 RUN mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache/data storage/logs bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
 
-# Generate key, publish Filament assets, and link storage
-RUN php artisan key:generate --force \
-    && php artisan filament:assets \
-    && php artisan storage:link
+# Make docker-entrypoint executable
+RUN chmod +x /var/www/html/docker-entrypoint.sh
 
 EXPOSE 80
 
+ENTRYPOINT ["/var/www/html/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
