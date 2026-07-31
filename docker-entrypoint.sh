@@ -10,6 +10,7 @@ APP_ENV=production
 APP_KEY=base64:uJ3n1jO8g+d4zW1V8q5b9A2k4L6m8N0P2q4R6S8T0U=
 APP_DEBUG=true
 APP_URL=https://ni-engineering-backend.onrender.com
+LOG_CHANNEL=stderr
 DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
 CACHE_STORE=file
