@@ -15,6 +15,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Support\HtmlString;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -31,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Gray,
             ])
             ->brandName('N.I. Engineering Services CMS')
+            ->brandLogo(fn () => new HtmlString('<img src="/wp-content/uploads/2017/11/ni_logo-1.png" alt="N.I. Logo" class="h-10">'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->pages([
                 Pages\Dashboard::class,
