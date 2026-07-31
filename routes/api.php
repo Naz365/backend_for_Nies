@@ -11,13 +11,34 @@ Route::get('/ping', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
 });
 
+Route::get('/test-db', function () {
+    try {
+        $dbPath = config('database.connections.sqlite.database');
+        if (!file_exists($dbPath)) {
+            return response()->json(['status' => 'missing_file', 'db_path' => $dbPath]);
+        }
+        $pdo = new \PDO('sqlite:' . $dbPath);
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        
+        $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type='table';")->fetchAll(\PDO::FETCH_COLUMN);
+        
+        return response()->json([
+            'status' => 'success',
+            'database_path' => $dbPath,
+            'tables' => $tables
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
 Route::prefix('v1')->group(function () {
-    // Read-only API endpoints for static site generation & public frontend
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/blog', [BlogPostController::class, 'index']);
     Route::get('/settings', [SiteSettingController::class, 'index']);
-
-    // Rate-limited contact submission endpoint (5 submissions per minute per IP)
     Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1');
 });
