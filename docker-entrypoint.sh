@@ -12,29 +12,29 @@ APP_DEBUG=true
 APP_URL=https://ni-engineering-backend.onrender.com
 DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
-CACHE_STORE=file
-SESSION_DRIVER=file
+CACHE_STORE=array
+SESSION_DRIVER=cookie
 FILESYSTEM_DISK=public
 EOT
 fi
 
-# Recreate fresh SQLite database file
+# Ensure SQLite database directory & file exists
 mkdir -p /var/www/html/database
 if [ ! -f /var/www/html/database/database.sqlite ]; then
     touch /var/www/html/database/database.sqlite
 fi
 
-# Ensure storage and bootstrap cache directories exist
+# Ensure storage and bootstrap cache directories exist with full permissions
 mkdir -p /var/www/html/storage/framework/views \
          /var/www/html/storage/framework/sessions \
          /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/logs \
          /var/www/html/bootstrap/cache
 
-# Remove any stale bootstrap cache files
+# Remove stale bootstrap cache
 rm -f /var/www/html/bootstrap/cache/*.php
 
-# Set permissions for Apache www-data user
+# Grant permissions to www-data
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
 
