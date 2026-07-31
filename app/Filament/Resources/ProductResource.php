@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationIcon = null;
     protected static ?string $navigationGroup = 'Portfolio & Catalog';
 
     public static function form(Form $form): Form

@@ -13,24 +13,25 @@ use Filament\Tables\Table;
 class ContactSubmissionResource extends Resource
 {
     protected static ?string $model = ContactSubmission::class;
-    protected static ?string $navigationIcon = 'heroicon-o-inbox';
-    protected static ?string $navigationGroup = 'Audit & Inquiries';
+    protected static ?string $navigationIcon = null;
+    protected static ?string $navigationGroup = 'Site Settings & Clients';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->disabled(),
-                Forms\Components\TextInput::make('email')->disabled(),
-                Forms\Components\TextInput::make('phone')->disabled(),
-                Forms\Components\TextInput::make('subject')->disabled(),
-                Forms\Components\Textarea::make('message')->disabled()->columnSpanFull(),
+                Forms\Components\TextInput::make('name')->readOnly(),
+                Forms\Components\TextInput::make('email')->readOnly(),
+                Forms\Components\TextInput::make('phone')->readOnly(),
+                Forms\Components\TextInput::make('subject')->readOnly(),
+                Forms\Components\Textarea::make('message')->readOnly()->columnSpanFull(),
                 Forms\Components\Select::make('status')
                     ->options([
                         'new' => 'New',
                         'read' => 'Read',
                         'replied' => 'Replied',
-                    ]),
+                    ])
+                    ->required(),
             ]);
     }
 

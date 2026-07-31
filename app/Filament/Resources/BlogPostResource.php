@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 class BlogPostResource extends Resource
 {
     protected static ?string $model = BlogPost::class;
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = null;
     protected static ?string $navigationGroup = 'Content Management';
 
     public static function form(Form $form): Form

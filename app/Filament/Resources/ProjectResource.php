@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 class ProjectResource extends Resource
 {
     protected static ?string $model = Project::class;
-    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
+    protected static ?string $navigationIcon = null;
     protected static ?string $navigationGroup = 'Portfolio & Catalog';
 
     public static function form(Form $form): Form
