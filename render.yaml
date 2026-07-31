@@ -2,16 +2,18 @@ services:
   - type: web
     name: ni-engineering-backend
     env: docker
-    dockerfilePath: backend/Dockerfile
+    dockerfilePath: Dockerfile
     plan: free
     region: singapore
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: "false"
+        value: "true"
+      - key: APP_KEY
+        value: base64:uJ3n1jO8g+d4zW1V8q5b9A2k4L6m8N0P2q4R6S8T0U=
       - key: APP_URL
-        value: https://manage.niengineeringbd.com
+        value: https://ni-engineering-backend.onrender.com
       - key: DB_CONNECTION
         value: sqlite
       - key: DB_DATABASE
