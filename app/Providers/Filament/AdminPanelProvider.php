@@ -23,8 +23,8 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('admin')
-            ->path('admin')
+            ->id('portal')
+            ->path('portal')
             ->login()
             ->colors([
                 'primary' => '#E53E3E',
@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Gray,
             ])
             ->brandName('N.I. Engineering Services CMS')
-            ->brandLogo(fn () => new HtmlString('<img src="/wp-content/uploads/2017/11/ni_logo-1.png" alt="N.I. Logo" class="h-10">'))
+            ->brandLogo(fn () => new HtmlString('<img src="https://niengineeringbd.com/wp-content/uploads/2017/11/ni_logo-1.png" alt="N.I. Logo" class="h-10">'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->pages([
                 Pages\Dashboard::class,
