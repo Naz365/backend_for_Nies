@@ -49,5 +49,5 @@ Route::prefix('v1')->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/blog', [BlogPostController::class, 'index']);
     Route::get('/settings', [SiteSettingController::class, 'index']);
-    Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1');
+    Route::post('/contact', [ContactController::class, 'store']);
 });
