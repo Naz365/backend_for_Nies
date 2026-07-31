@@ -6,22 +6,21 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
-Route::get('/debug-test', function () {
+Route::get('/debug-login', function () {
     try {
-        $count = \App\Models\Project::count();
+        $panel = \Filament\Facades\Filament::getCurrentPanel();
         return response()->json([
-            'status' => 'success',
-            'project_count' => $count,
-            'db_connection' => config('database.default'),
-            'db_path' => config('database.connections.sqlite.database')
+            'status' => 'panel_resolved',
+            'panel_id' => $panel ? $panel->getId() : 'null',
+            'user_count' => \App\Models\User::count()
         ]);
     } catch (\Throwable $e) {
         return response()->json([
             'status' => 'error',
-            'error_message' => $e->getMessage(),
+            'message' => $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'trace' => substr($e->getTraceAsString(), 0, 1000)
+            'trace' => substr($e->getTraceAsString(), 0, 1500)
         ], 200);
     }
 });
