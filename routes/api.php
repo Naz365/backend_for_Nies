@@ -35,6 +35,15 @@ Route::get('/test-db', function () {
     }
 });
 
+Route::get('/test-projects', function () {
+    try {
+        $data = \App\Models\Project::all();
+        return response()->json(['status' => 'success', 'data' => $data]);
+    } catch (\Throwable $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+    }
+});
+
 Route::prefix('v1')->group(function () {
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::get('/products', [ProductController::class, 'index']);
