@@ -14,7 +14,7 @@ class ProjectController extends Controller
             $projects = Project::where('status', 'published')->get();
             return response()->json(['data' => $projects]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
     }
 }
