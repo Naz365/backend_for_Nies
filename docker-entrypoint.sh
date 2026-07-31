@@ -18,31 +18,30 @@ FILESYSTEM_DISK=public
 EOT
 fi
 
-# Ensure SQLite database directory & file exists
+# Ensure SQLite database directory & file exists with full permissions
 mkdir -p /var/www/html/database
 touch /var/www/html/database/database.sqlite
+chmod -R 777 /var/www/html/database
 
-# Ensure storage and bootstrap cache directories exist
+# Ensure storage and bootstrap cache directories exist with full permissions
 mkdir -p /var/www/html/storage/framework/views \
          /var/www/html/storage/framework/sessions \
          /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/logs \
          /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Fix ownership and permissions for Apache www-data user
+# Run database migrations and seeding explicitly
+echo "Running Artisan Database Migrations & Seeders..."
+php artisan migrate:fresh --seed --force
+php artisan filament:assets
+php artisan storage:link || true
+php artisan config:clear
+php artisan route:clear
+
+# Fix ownership for Apache www-data user
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
-
-# Run artisan setup commands safely
-php artisan migrate:fresh --seed --force || true
-php artisan filament:assets || true
-php artisan storage:link || true
-php artisan config:clear || true
-php artisan route:clear || true
-
-# Re-fix ownership after artisan commands
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
-chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 echo "Setup completed successfully. Starting Apache web server..."
 
