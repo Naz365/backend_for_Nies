@@ -2,7 +2,7 @@
 
 echo "Starting N.I. Engineering Backend Container Setup..."
 
-# Ensure .env file exists with default production variables
+# Ensure .env file exists
 if [ ! -f /var/www/html/.env ]; then
     cat <<EOT > /var/www/html/.env
 APP_NAME="N.I. Engineering Services CMS"
@@ -18,8 +18,9 @@ FILESYSTEM_DISK=public
 EOT
 fi
 
-# Ensure SQLite database directory & file exists
+# Recreate fresh SQLite database file
 mkdir -p /var/www/html/database
+rm -f /var/www/html/database/database.sqlite
 touch /var/www/html/database/database.sqlite
 
 # Ensure storage and bootstrap cache directories exist
@@ -32,18 +33,18 @@ mkdir -p /var/www/html/storage/framework/views \
 # Remove any stale bootstrap cache files
 rm -f /var/www/html/bootstrap/cache/*.php
 
-# Grant full permissions and www-data ownership to the whole web tree
-chown -R www-data:www-data /var/www/html
+# Set permissions for Apache www-data user
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
 
-# Run artisan setup as www-data user
+# Run database migrations and seeders as www-data user
 su -s /bin/bash www-data -c "php artisan migrate:fresh --seed --force" || true
 su -s /bin/bash www-data -c "php artisan filament:assets" || true
 su -s /bin/bash www-data -c "php artisan storage:link" || true
 
 # Re-grant permissions
-chown -R www-data:www-data /var/www/html
-chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 echo "Setup completed successfully. Starting Apache web server..."
 
