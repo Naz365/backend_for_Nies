@@ -1,0 +1,27 @@
+{
+  "name": "niengineering/backend",
+  "type": "project",
+  "description": "Laravel 12 + Filament v3 Admin Portal & API for manage.niengineeringbd.com",
+  "keywords": ["laravel", "filament", "admin", "api"],
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^12.0",
+    "laravel/tinker": "^2.9",
+    "filament/filament": "^3.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Database\\Factories\\": "database/factories/",
+      "Database\\Seeders\\": "database/seeders/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
