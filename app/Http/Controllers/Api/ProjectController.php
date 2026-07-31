@@ -10,11 +10,7 @@ class ProjectController extends Controller
 {
     public function index(): JsonResponse
     {
-        try {
-            $projects = Project::where('status', 'published')->get();
-            return response()->json(['data' => $projects]);
-        } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-        }
+        $projects = Project::where('status', 'published')->get();
+        return response()->json(['data' => $projects]);
     }
 }
