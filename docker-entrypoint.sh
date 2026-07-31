@@ -24,19 +24,20 @@ if [ ! -f /var/www/html/database/database.sqlite ]; then
     touch /var/www/html/database/database.sqlite
 fi
 
-# Ensure storage and bootstrap cache directories exist with full write access
+# Ensure storage, bootstrap cache, and public vendor directories exist with full write access
 mkdir -p /var/www/html/storage/framework/views \
          /var/www/html/storage/framework/sessions \
          /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/logs \
-         /var/www/html/bootstrap/cache
+         /var/www/html/bootstrap/cache \
+         /var/www/html/public/vendor
 
 # Remove stale bootstrap cache
 rm -f /var/www/html/bootstrap/cache/*.php
 
-# Grant permissions to www-data
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
-chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/.env
+# Grant permissions to www-data for full web root
+chown -R www-data:www-data /var/www/html
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/public /var/www/html/.env
 
 # Run database migrations and seeders as www-data user
 su -s /bin/bash www-data -c "php artisan migrate:fresh --seed --force" || true
@@ -45,11 +46,9 @@ su -s /bin/bash www-data -c "php artisan livewire:publish --assets" || true
 su -s /bin/bash www-data -c "php artisan storage:link" || true
 su -s /bin/bash www-data -c "php artisan view:clear" || true
 
-# Re-grant 777 permissions recursively to storage right before starting Apache
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
-chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
-find /var/www/html/storage -type d -exec chmod 777 {} +
-find /var/www/html/storage -type f -exec chmod 666 {} +
+# Re-grant 777 permissions recursively right before starting Apache
+chown -R www-data:www-data /var/www/html
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database /var/www/html/public
 
 echo "Setup completed successfully. Starting Apache web server..."
 
