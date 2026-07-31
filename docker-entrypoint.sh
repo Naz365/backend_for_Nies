@@ -20,8 +20,9 @@ fi
 
 # Recreate fresh SQLite database file
 mkdir -p /var/www/html/database
-rm -f /var/www/html/database/database.sqlite
-touch /var/www/html/database/database.sqlite
+if [ ! -f /var/www/html/database/database.sqlite ]; then
+    touch /var/www/html/database/database.sqlite
+fi
 
 # Ensure storage and bootstrap cache directories exist
 mkdir -p /var/www/html/storage/framework/views \
@@ -40,7 +41,9 @@ chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/d
 # Run database migrations and seeders as www-data user
 su -s /bin/bash www-data -c "php artisan migrate:fresh --seed --force" || true
 su -s /bin/bash www-data -c "php artisan filament:assets" || true
+su -s /bin/bash www-data -c "php artisan livewire:publish --assets" || true
 su -s /bin/bash www-data -c "php artisan storage:link" || true
+su -s /bin/bash www-data -c "php artisan view:clear" || true
 
 # Re-grant permissions
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
