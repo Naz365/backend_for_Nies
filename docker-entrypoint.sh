@@ -45,9 +45,11 @@ su -s /bin/bash www-data -c "php artisan livewire:publish --assets" || true
 su -s /bin/bash www-data -c "php artisan storage:link" || true
 su -s /bin/bash www-data -c "php artisan view:clear" || true
 
-# Re-grant permissions
+# Re-grant 777 permissions recursively to storage right before starting Apache
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+find /var/www/html/storage -type d -exec chmod 777 {} +
+find /var/www/html/storage -type f -exec chmod 666 {} +
 
 echo "Setup completed successfully. Starting Apache web server..."
 
