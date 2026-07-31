@@ -19,6 +19,6 @@ services:
       - key: DB_DATABASE
         value: /var/www/html/database/database.sqlite
       - key: CACHE_STORE
-        value: array
+        value: file
       - key: SESSION_DRIVER
-        value: cookie
+        value: file
