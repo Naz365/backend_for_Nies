@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 use App\Models\Project;
 use App\Models\Product;
 use App\Models\BlogPost;
@@ -19,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (config('app.env') === 'production' || env('APP_ENV') === 'production') {
+            URL::forceScheme('https');
+        }
+
         // Register ContentObserver to trigger GitHub Actions deploy webhook on save/delete
         Project::observe(ContentObserver::class);
         Product::observe(ContentObserver::class);
