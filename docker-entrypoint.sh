@@ -42,9 +42,9 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force --no-interaction || true
 fi
 
-# Run additive database migrations only (NO migrate:fresh in production)
+# Run additive database migrations strictly (Failure must fail container startup)
 echo "Running Additive Artisan Database Migrations..."
-php artisan migrate --force || true
+php artisan migrate --force
 php artisan filament:assets || true
 php artisan livewire:publish --assets || true
 php artisan storage:link || true
