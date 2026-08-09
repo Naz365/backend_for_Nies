@@ -1,6 +1,6 @@
 # N.I. Engineering Digital Platform — Migration Ledger
 
-**Document Version:** 1.0 (Phase 0 Baseline)  
+**Document Version:** 1.0 (Phase 3 Admin Catalog Vertical Slice Completed)  
 **Governing Standard:** Section 9 & 48 of the *N.I. Engineering Services AI Agent Execution & Migration Master Plan*
 
 ---
@@ -9,21 +9,21 @@
 
 | Current Component | Target Component | Action | Status | Rationale & Migration Notes |
 |---|---|---|---|---|
-| **LocalStorage CMS (`admin.astro`)** | Filament Admin 3.x (`manage.niengineeringbd.com`) | **REPLACE** | Pending | Client-side static CMS creates separate truth; all CMS editing must flow through Filament. |
-| **LocalStorage Cart & Orders (`shop.astro`)** | Server-Authoritative API (`/api/v1/cart`, `/api/v1/orders`) + PostgreSQL | **REPLACE** | Pending | Browser orders are volatile and bypass server validation; real orders must persist in PostgreSQL. |
+| **LocalStorage CMS (`admin.astro`)** | Filament Admin 3.x (`manage.niengineeringbd.com`) | **DELETE** | Completed | Client-side static CMS removed; all administration consolidated into official Filament panel. |
+| **LocalStorage Cart & Orders (`shop.astro`)** | Server-Authoritative API (`/api/v1/cart`, `/api/v1/orders`) + PostgreSQL | **REPLACE** | Completed | Connected checkout form directly to backend REST order API with transaction and stock safety. |
 | **Product Model / Table (`Product.php`)** | Enhanced Product Schema (with `price`, `compare_at_price`, `stock_quantity`, `sku`, `category_id`) | **REFACTOR** | Completed | Add financial, stock, and taxonomy attributes to existing schema without dropping existing descriptions. |
 | **Customer Model / Table (`Customer.php`)** | Split into: `Customer` (real users) and `ClientLogo` (partner brands) | **REFACTOR** | Completed | Separates B2B client logos from e-commerce customers placing orders. |
 | **SQLite Database (`database.sqlite`)** | Managed PostgreSQL Instance | **REPLACE** | Completed | PostgreSQL driver configured with additive migrations; schema ready for zero-loss deployment. |
 | **Local Uploads (`storage/app/public`)** | Cloudflare R2 / S3-compatible Object Storage | **REPLACE** | Completed | Configured filesystems.php disk for Cloudflare R2 and AWS S3 persistent object storage. |
 | **Custom `/admin/login` Route (`web.php`)** | Filament Built-in Auth (`/manage/login`) | **DELETE** | Completed | Duplicates authentication and exposes hardcoded plaintext admin credentials. |
 | **Credential-Leaking `/v1/cms-status` (`api.php`)** | Standard `/api/v1/health` (No credentials) | **DELETE** | Completed | Endpoint directly returns admin email and password in plaintext JSON. |
-| **Astro Subdomain Pages (`/subdomains/*`)** | DNS-Level Subdomains via Cloudflare DNS | **DELETE** | Pending | Fake subdirectory subdomains violate production architecture contract. |
+| **Astro Subdomain Pages (`/subdomains/*`)** | DNS-Level Subdomains via Cloudflare DNS | **DELETE** | Completed | Removed fake Astro subdirectory pages and middleware; real DNS routing configured. |
 | **`migrate:fresh --seed` in `docker-entrypoint.sh`** | `php artisan migrate --force` | **REPLACE** | Completed | Destructive command wipes production database on every container boot. |
 | **Hardcoded `APP_KEY` in `render.yaml` / Docker** | Environment Configuration Injection | **REPLACE** | Completed | Current key is exposed in Git history and must be rotated in hosting environment. |
 | **Production Debug Mode (`APP_DEBUG=true`)** | `APP_DEBUG=false` | **REFACTOR** | Completed | Prevents stack trace and environment leakage during production runtime exceptions. |
-| **Astro SSG Marketing Engine (`src/pages/*`)** | Astro Static Marketing + Dynamic API Client | **KEEP** | Pending | High SEO performance and sub-second load times must be preserved for public presentation. |
-| **Tailwind Design System & Dark Mode** | Unified Design Tokens & Dynamic Theme Switcher | **KEEP** | Pending | Visual design, contrast compliance, and dark mode tokens are fully functional. |
-| **DeployWebhookService (`build-static-site`)** | Synchronized GitHub Actions Dispatcher | **KEEP** | Pending | Webhook event name `build-static-site` already matches workflow trigger. |
+| **Astro SSG Marketing Engine (`src/pages/*`)** | Astro Static Marketing + Modular Dynamic API Client (`src/lib/api/*`) | **KEEP** | Completed | High SEO performance and sub-second load times preserved with resilient client-side product pipeline. |
+| **Tailwind Design System & Dark Mode** | Unified Design Tokens & Dynamic Theme Switcher | **KEEP** | Completed | Visual design, contrast compliance, and dark mode tokens are fully functional. |
+| **DeployWebhookService (`build-static-site`)** | Synchronized GitHub Actions Dispatcher | **KEEP** | Completed | Webhook event name `build-static-site` already matches workflow trigger. |
 
 ---
 
@@ -64,5 +64,5 @@
 
 ## 3. Approval Gate
 
-In compliance with **Rule 77 & 78** of the *Migration Master Plan*, all code modifications are paused.  
-**Phase 0 Baseline Complete.** Awaiting explicit approval to execute **Phase 1: Security Emergency**.
+In compliance with **Rule 80** of the *Migration Master Plan*, Phase 3 has completed.  
+**Phase 3 Baseline Complete.** Awaiting explicit approval to execute **Phase 4: Cart Behavior**.
