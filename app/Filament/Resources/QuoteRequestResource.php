@@ -29,6 +29,7 @@ class QuoteRequestResource extends Resource
                                 'new' => 'New Inbound',
                                 'contacted' => 'Contacted / Meeting Scheduled',
                                 'quoted' => 'Quotation Sent',
+                                'approved' => 'Quotation Approved',
                                 'closed' => 'Closed / Contract Signed',
                             ])
                             ->required(),
@@ -66,12 +67,23 @@ class QuoteRequestResource extends Resource
                         'new' => 'danger',
                         'contacted' => 'warning',
                         'quoted' => 'info',
+                        'approved' => 'primary',
                         'closed' => 'success',
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'new' => 'New Inbound',
+                        'contacted' => 'Contacted',
+                        'quoted' => 'Quoted',
+                        'approved' => 'Approved',
+                        'closed' => 'Closed',
+                    ]),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
