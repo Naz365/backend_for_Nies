@@ -1,9 +1,10 @@
 # N.I. Engineering Digital Platform — Database Architecture & Schema Specification
 
-**Document Version:** 1.0 (Phase 2 Production Data Foundation)  
-**Governing Standard:** Sections 15–25, 50, 80 of the *N.I. Engineering Services AI Agent Execution & Migration Master Plan*  
+**Document Version:** 1.0 (Phase 3 — Database Foundation Completed)  
+**Governing Standard:** Sections 12–19, 46, 57 of the *N.I. Engineering Services AI Agent Master Migration & Execution Specification*  
 **Authoritative Database Engine:** Managed PostgreSQL 15+ / 16  
-**Migration Strategy:** Strictly Additive (`php artisan migrate --force`)
+**Migration Strategy:** Strictly Additive (`php artisan migrate --force`)  
+**Active Working Branch:** `migration`
 
 ---
 
@@ -40,40 +41,40 @@
 
 ---
 
-## 2. Table Specifications
+## 2. Table Specifications & Constraints
 
 ### A. Taxonomy & Catalog Domain
 
 #### 1. `categories`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
 | `name` | `VARCHAR(255)` | No | — | Category title (e.g. Fire Extinguishers) |
-| `slug` | `VARCHAR(255)` | No | — | Unique URL-safe slug |
-| `description` | `TEXT` | Yes | NULL | Category overview description |
-| `image` | `VARCHAR(255)` | Yes | NULL | Category thumbnail image path |
-| `is_active` | `BOOLEAN` | No | `true` | Visibility toggle |
-| `sort_order` | `INTEGER` | No | `0` | UI display ordering |
+| `slug` | `VARCHAR(255)` | No | — | `UNIQUE(slug)` index |
+| `description` | `TEXT` | Yes | NULL | Overview description |
+| `image` | `VARCHAR(255)` | Yes | NULL | Thumbnail image path |
+| `is_active` | `BOOLEAN` | No | `true` | Visibility status |
+| `sort_order` | `INTEGER` | No | `0` | Order of display |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 #### 2. `products`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `category_id` | `BIGINT` (FK) | Yes | NULL | References `categories(id)` (ON DELETE SET NULL) |
-| `sku` | `VARCHAR(100)` | Yes | NULL | Unique Stock Keeping Unit |
+| `category_id` | `BIGINT` (FK) | Yes | NULL | References `categories(id)` (`ON DELETE SET NULL`) |
+| `sku` | `VARCHAR(100)` | Yes | NULL | `UNIQUE(sku)` index |
 | `title` | `VARCHAR(255)` | No | — | Product name |
-| `slug` | `VARCHAR(255)` | No | — | Unique URL slug |
-| `category_slug` | `VARCHAR(100)` | No | — | Legacy fallback category identifier |
-| `category_name` | `VARCHAR(100)` | Yes | NULL | Category display string |
-| `image` | `VARCHAR(255)` | Yes | NULL | Primary product image path |
-| `description` | `TEXT` | Yes | NULL | Product marketing description |
-| `specifications` | `TEXT` | Yes | NULL | Technical specifications (HTML) |
-| `price` | `NUMERIC(12,2)` | No | `0.00` | Authoritative selling price in ৳ BDT |
-| `compare_at_price` | `NUMERIC(12,2)` | Yes | NULL | Strikethrough regular price in ৳ BDT |
-| `stock_quantity` | `INTEGER` | No | `100` | Current available inventory count |
-| `track_inventory` | `BOOLEAN` | No | `true` | Inventory enforcement flag |
-| `is_featured` | `BOOLEAN` | No | `false` | Featured on storefront |
+| `slug` | `VARCHAR(255)` | No | — | `UNIQUE(slug)` index |
+| `category_slug` | `VARCHAR(100)` | No | — | Fallback identifier |
+| `category_name` | `VARCHAR(100)` | Yes | NULL | Category display label |
+| `image` | `VARCHAR(255)` | Yes | NULL | Product image asset path |
+| `description` | `TEXT` | Yes | NULL | Overview description |
+| `specifications` | `TEXT` | Yes | NULL | Rich HTML specifications |
+| `price` | `NUMERIC(12,2)` | No | `0.00` | Authoritative selling price (৳ BDT) |
+| `compare_at_price` | `NUMERIC(12,2)` | Yes | NULL | Strikethrough regular price (৳ BDT) |
+| `stock_quantity` | `INTEGER` | No | `100` | Inventory balance count |
+| `track_inventory` | `BOOLEAN` | No | `true` | Inventory tracking flag |
+| `is_featured` | `BOOLEAN` | No | `false` | Featured flag |
 | `status` | `VARCHAR(50)` | No | `'published'` | `'draft'`, `'published'`, `'archived'` |
 | `meta_title` | `VARCHAR(255)` | Yes | NULL | SEO Meta Title |
 | `meta_description` | `TEXT` | Yes | NULL | SEO Meta Description |
@@ -84,27 +85,27 @@
 ### B. Customer & Address Domain
 
 #### 3. `customers`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `user_id` | `BIGINT` (FK) | Yes | NULL | Optional account reference to `users(id)` |
-| `name` | `VARCHAR(255)` | No | — | Customer full name |
-| `email` | `VARCHAR(255)` | Yes | NULL | Email address (indexed) |
-| `phone` | `VARCHAR(50)` | No | — | Contact phone number (indexed) |
+| `user_id` | `BIGINT` (FK) | Yes | NULL | References `users(id)` (`ON DELETE SET NULL`) |
+| `name` | `VARCHAR(255)` | No | — | Full customer name |
+| `email` | `VARCHAR(255)` | Yes | NULL | `INDEX(email)` |
+| `phone` | `VARCHAR(50)` | No | — | `INDEX(phone)` |
 | `is_active` | `BOOLEAN` | No | `true` | Account active flag |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 #### 4. `addresses`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `customer_id` | `BIGINT` (FK) | No | — | References `customers(id)` (CASCADE) |
+| `customer_id` | `BIGINT` (FK) | No | — | References `customers(id)` (`ON DELETE CASCADE`) |
 | `type` | `VARCHAR(50)` | No | `'shipping'` | `'shipping'` or `'billing'` |
-| `address_line_1` | `VARCHAR(255)` | No | — | Street address / Building / Road |
-| `address_line_2` | `VARCHAR(255)` | Yes | NULL | Area (e.g. Gulshan, Badda, Uttara) |
+| `address_line_1` | `VARCHAR(255)` | No | — | Street address / Building |
+| `address_line_2` | `VARCHAR(255)` | Yes | NULL | Area (e.g. Gulshan, Badda) |
 | `city` | `VARCHAR(100)` | No | `'Dhaka'` | City |
-| `postal_code` | `VARCHAR(20)` | Yes | NULL | Postal / Zip Code |
-| `is_default` | `BOOLEAN` | No | `true` | Default address selection |
+| `postal_code` | `VARCHAR(20)` | Yes | NULL | Zip Code |
+| `is_default` | `BOOLEAN` | No | `true` | Default selection |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 ---
@@ -112,57 +113,54 @@
 ### C. Shopping Cart Domain
 
 #### 5. `carts`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
 | `customer_id` | `BIGINT` (FK) | Yes | NULL | References `customers(id)` |
-| `session_token` | `VARCHAR(255)` | No | — | Anonymous guest token (indexed) |
+| `session_token` | `VARCHAR(255)` | No | — | `INDEX(session_token)` |
 | `status` | `VARCHAR(50)` | No | `'active'` | `'active'`, `'converted'`, `'abandoned'` |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 #### 6. `cart_items`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `cart_id` | `BIGINT` (FK) | No | — | References `carts(id)` (CASCADE) |
-| `product_id` | `BIGINT` (FK) | No | — | References `products(id)` (CASCADE) |
-| `quantity` | `INTEGER` | No | `1` | Item quantity |
-| `unit_price` | `NUMERIC(12,2)` | No | — | Snapshot unit price in ৳ BDT |
+| `cart_id` | `BIGINT` (FK) | No | — | References `carts(id)` (`CASCADE`) |
+| `product_id` | `BIGINT` (FK) | No | — | References `products(id)` (`CASCADE`) |
+| `quantity` | `INTEGER` | No | `1` | Quantity |
+| `unit_price` | `NUMERIC(12,2)` | No | — | Cached snapshot unit price in ৳ BDT |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 ---
 
-### D. Orders & Payments Domain (Snapshot Integrity)
+### D. Orders & Payments Domain (Frozen Snapshots)
 
 #### 7. `orders`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `order_number` | `VARCHAR(100)` | No | — | Unique order code (e.g. `NIES-2026-00001`) |
+| `order_number` | `VARCHAR(100)` | No | — | `UNIQUE(order_number)` index |
 | `customer_id` | `BIGINT` (FK) | Yes | NULL | References `customers(id)` |
 | `customer_name` | `VARCHAR(255)` | No | — | Customer name snapshot |
 | `customer_email` | `VARCHAR(255)` | Yes | NULL | Customer email snapshot |
 | `customer_phone` | `VARCHAR(50)` | No | — | Customer phone snapshot |
-| `shipping_address` | `TEXT` | No | — | Complete delivery address snapshot |
-| `subtotal` | `NUMERIC(12,2)` | No | — | Products subtotal in ৳ BDT |
-| `shipping_fee` | `NUMERIC(12,2)` | No | `0.00` | Delivery fee in ৳ BDT |
-| `discount_amount` | `NUMERIC(12,2)` | No | `0.00` | Promo / discount deduction |
-| `total_amount` | `NUMERIC(12,2)` | No | — | Net payable amount in ৳ BDT |
-| `payment_method` | `VARCHAR(50)` | No | `'cod'` | `'cod'`, `'sslcommerz'`, `'bkash'`, `'nagad'` |
+| `shipping_address` | `TEXT` | No | — | Delivery address snapshot |
+| `subtotal` | `NUMERIC(12,2)` | No | — | Products subtotal (৳ BDT) |
+| `shipping_fee` | `NUMERIC(12,2)` | No | `0.00` | Shipping charge (৳ BDT) |
+| `discount_amount` | `NUMERIC(12,2)` | No | `0.00` | Discount deduction (৳ BDT) |
+| `total_amount` | `NUMERIC(12,2)` | No | — | Net payable total (৳ BDT) |
+| `payment_method` | `VARCHAR(50)` | No | `'cod'` | `'cod'`, `'sslcommerz'`, etc. |
 | `payment_status` | `VARCHAR(50)` | No | `'unpaid'` | `'unpaid'`, `'paid'`, `'failed'`, `'refunded'` |
 | `status` | `VARCHAR(50)` | No | `'pending'` | `'pending'`, `'confirmed'`, `'processing'`, `'shipped'`, `'delivered'`, `'cancelled'` |
-| `notes` | `TEXT` | Yes | NULL | Internal admin / fulfillment notes |
+| `notes` | `TEXT` | Yes | NULL | Internal admin notes |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 #### 8. `order_items` (Historical Snapshot Rule)
-> [!IMPORTANT]
-> `order_items` stores frozen product title, SKU, and unit price snapshots at time of purchase. Future price edits to the `products` table will NEVER corrupt past order totals.
-
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `order_id` | `BIGINT` (FK) | No | — | References `orders(id)` (CASCADE) |
-| `product_id` | `BIGINT` (FK) | Yes | NULL | References `products(id)` (SET NULL on delete) |
+| `order_id` | `BIGINT` (FK) | No | — | References `orders(id)` (`CASCADE`) |
+| `product_id` | `BIGINT` (FK) | Yes | NULL | References `products(id)` (`SET NULL`) |
 | `product_title_snapshot` | `VARCHAR(255)` | No | — | Frozen title snapshot |
 | `sku_snapshot` | `VARCHAR(100)` | Yes | NULL | Frozen SKU snapshot |
 | `unit_price_snapshot` | `NUMERIC(12,2)` | No | — | Frozen unit price in ৳ BDT |
@@ -171,17 +169,17 @@
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 #### 9. `payments`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `order_id` | `BIGINT` (FK) | No | — | References `orders(id)` (CASCADE) |
-| `transaction_id` | `VARCHAR(255)` | Yes | NULL | Gateway transaction identifier |
+| `order_id` | `BIGINT` (FK) | No | — | References `orders(id)` (`CASCADE`) |
+| `transaction_id` | `VARCHAR(255)` | Yes | NULL | `INDEX(transaction_id)` |
 | `payment_method` | `VARCHAR(50)` | No | `'cod'` | Payment channel |
-| `gateway` | `VARCHAR(50)` | No | `'manual_cod'` | `'manual_cod'`, `'sslcommerz'`, etc. |
-| `amount` | `NUMERIC(12,2)` | No | — | Paid amount in ৳ BDT |
-| `currency` | `VARCHAR(10)` | No | `'BDT'` | Currency ISO code |
+| `gateway` | `VARCHAR(50)` | No | `'manual_cod'` | Gateway handler |
+| `amount` | `NUMERIC(12,2)` | No | — | Amount paid in ৳ BDT |
+| `currency` | `VARCHAR(10)` | No | `'BDT'` | Currency code |
 | `status` | `VARCHAR(50)` | No | `'pending'` | `'pending'`, `'success'`, `'failed'`, `'cancelled'` |
-| `gateway_response` | `JSONB` | Yes | NULL | Raw webhook payload for auditability |
+| `gateway_response` | `JSONB` | Yes | NULL | Raw response log |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 ---
@@ -189,27 +187,27 @@
 ### E. Corporate, Quotes & Brand Domain
 
 #### 10. `quote_requests`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
-| `request_number` | `VARCHAR(100)` | No | — | Unique quotation code (e.g. `QR-2026-00001`) |
-| `customer_name` | `VARCHAR(255)` | No | — | Client contact name |
+| `request_number` | `VARCHAR(100)` | No | — | `UNIQUE(request_number)` index |
+| `customer_name` | `VARCHAR(255)` | No | — | Contact person |
 | `company_name` | `VARCHAR(255)` | Yes | NULL | Company / Factory name |
-| `email` | `VARCHAR(255)` | Yes | NULL | Client email |
-| `phone` | `VARCHAR(50)` | No | — | Contact telephone |
-| `service_type` | `VARCHAR(100)` | No | — | System / Service required |
-| `project_description` | `TEXT` | No | — | Detailed engineering scope |
+| `email` | `VARCHAR(255)` | Yes | NULL | Email |
+| `phone` | `VARCHAR(50)` | No | — | Phone |
+| `service_type` | `VARCHAR(100)` | No | — | Requested service category |
+| `project_description` | `TEXT` | No | — | Scope of work |
 | `status` | `VARCHAR(50)` | No | `'new'` | `'new'`, `'contacted'`, `'quoted'`, `'closed'` |
-| `notes` | `TEXT` | Yes | NULL | Internal engineering estimator notes |
+| `notes` | `TEXT` | Yes | NULL | Internal estimator notes |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
 
 #### 11. `client_logos`
-| Column | Type | Nullable | Default | Description |
+| Column | Type | Nullable | Default | Constraints / Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` (PK) | No | Auto | Primary key |
 | `name` | `VARCHAR(255)` | No | — | Partner / Client brand name |
 | `logo_path` | `VARCHAR(255)` | No | — | Image asset path |
-| `website_url` | `VARCHAR(255)` | Yes | NULL | Partner URL |
-| `sort_order` | `INTEGER` | No | `0` | Order |
-| `is_active` | `BOOLEAN` | No | `true` | Visibility |
+| `website_url` | `VARCHAR(255)` | Yes | NULL | Website URL |
+| `sort_order` | `INTEGER` | No | `0` | Display order |
+| `is_active` | `BOOLEAN` | No | `true` | Active toggle |
 | `created_at` / `updated_at` | `TIMESTAMP` | No | `now()` | Timestamps |
