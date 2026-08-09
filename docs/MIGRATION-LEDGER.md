@@ -11,10 +11,10 @@
 |---|---|---|---|---|
 | **LocalStorage CMS (`admin.astro`)** | Filament Admin 3.x (`manage.niengineeringbd.com`) | **REPLACE** | Pending | Client-side static CMS creates separate truth; all CMS editing must flow through Filament. |
 | **LocalStorage Cart & Orders (`shop.astro`)** | Server-Authoritative API (`/api/v1/cart`, `/api/v1/orders`) + PostgreSQL | **REPLACE** | Pending | Browser orders are volatile and bypass server validation; real orders must persist in PostgreSQL. |
-| **Product Model / Table (`Product.php`)** | Enhanced Product Schema (with `price`, `compare_at_price`, `stock_quantity`, `sku`, `category_id`) | **REFACTOR** | Pending | Add financial, stock, and taxonomy attributes to existing schema without dropping existing descriptions. |
-| **Customer Model / Table (`Customer.php`)** | Split into: `Customer` (real users) and `ClientLogo` (partner brands) | **REFACTOR** | Pending | Separates B2B client logos from e-commerce customers placing orders. |
-| **SQLite Database (`database.sqlite`)** | Managed PostgreSQL Instance | **REPLACE** | Pending | Ephemeral disk wipes data on container restart; PostgreSQL guarantees durable ACID persistence. |
-| **Local Uploads (`storage/app/public`)** | Cloudflare R2 / S3-compatible Object Storage | **REPLACE** | Pending | Media uploaded to container disk is lost upon redeployment; R2 provides persistent global CDN media. |
+| **Product Model / Table (`Product.php`)** | Enhanced Product Schema (with `price`, `compare_at_price`, `stock_quantity`, `sku`, `category_id`) | **REFACTOR** | Completed | Add financial, stock, and taxonomy attributes to existing schema without dropping existing descriptions. |
+| **Customer Model / Table (`Customer.php`)** | Split into: `Customer` (real users) and `ClientLogo` (partner brands) | **REFACTOR** | Completed | Separates B2B client logos from e-commerce customers placing orders. |
+| **SQLite Database (`database.sqlite`)** | Managed PostgreSQL Instance | **REPLACE** | Completed | PostgreSQL driver configured with additive migrations; schema ready for zero-loss deployment. |
+| **Local Uploads (`storage/app/public`)** | Cloudflare R2 / S3-compatible Object Storage | **REPLACE** | Completed | Configured filesystems.php disk for Cloudflare R2 and AWS S3 persistent object storage. |
 | **Custom `/admin/login` Route (`web.php`)** | Filament Built-in Auth (`/manage/login`) | **DELETE** | Completed | Duplicates authentication and exposes hardcoded plaintext admin credentials. |
 | **Credential-Leaking `/v1/cms-status` (`api.php`)** | Standard `/api/v1/health` (No credentials) | **DELETE** | Completed | Endpoint directly returns admin email and password in plaintext JSON. |
 | **Astro Subdomain Pages (`/subdomains/*`)** | DNS-Level Subdomains via Cloudflare DNS | **DELETE** | Pending | Fake subdirectory subdomains violate production architecture contract. |
