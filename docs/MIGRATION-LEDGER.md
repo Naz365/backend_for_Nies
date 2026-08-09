@@ -1,68 +1,97 @@
-# N.I. Engineering Digital Platform — Migration Ledger
+# N.I. Engineering Digital Platform — Master Migration Ledger
 
-**Document Version:** 1.0 (Phase 3 Admin Catalog Vertical Slice Completed)  
-**Governing Standard:** Section 9 & 48 of the *N.I. Engineering Services AI Agent Execution & Migration Master Plan*
-
----
-
-## 1. Master Migration Registry
-
-| Current Component | Target Component | Action | Status | Rationale & Migration Notes |
-|---|---|---|---|---|
-| **LocalStorage CMS (`admin.astro`)** | Filament Admin 3.x (`manage.niengineeringbd.com`) | **DELETE** | Completed | Client-side static CMS removed; all administration consolidated into official Filament panel. |
-| **LocalStorage Cart & Orders (`shop.astro`)** | Server-Authoritative API (`/api/v1/cart`, `/api/v1/orders`) + PostgreSQL | **REPLACE** | Completed | Connected checkout form directly to backend REST order API with transaction and stock safety. |
-| **Product Model / Table (`Product.php`)** | Enhanced Product Schema (with `price`, `compare_at_price`, `stock_quantity`, `sku`, `category_id`) | **REFACTOR** | Completed | Add financial, stock, and taxonomy attributes to existing schema without dropping existing descriptions. |
-| **Customer Model / Table (`Customer.php`)** | Split into: `Customer` (real users) and `ClientLogo` (partner brands) | **REFACTOR** | Completed | Separates B2B client logos from e-commerce customers placing orders. |
-| **SQLite Database (`database.sqlite`)** | Managed PostgreSQL Instance | **REPLACE** | Completed | PostgreSQL driver configured with additive migrations; schema ready for zero-loss deployment. |
-| **Local Uploads (`storage/app/public`)** | Cloudflare R2 / S3-compatible Object Storage | **REPLACE** | Completed | Configured filesystems.php disk for Cloudflare R2 and AWS S3 persistent object storage. |
-| **Custom `/admin/login` Route (`web.php`)** | Filament Built-in Auth (`/manage/login`) | **DELETE** | Completed | Duplicates authentication and exposes hardcoded plaintext admin credentials. |
-| **Credential-Leaking `/v1/cms-status` (`api.php`)** | Standard `/api/v1/health` (No credentials) | **DELETE** | Completed | Endpoint directly returns admin email and password in plaintext JSON. |
-| **Astro Subdomain Pages (`/subdomains/*`)** | DNS-Level Subdomains via Cloudflare DNS | **DELETE** | Completed | Removed fake Astro subdirectory pages and middleware; real DNS routing configured. |
-| **`migrate:fresh --seed` in `docker-entrypoint.sh`** | `php artisan migrate --force` | **REPLACE** | Completed | Destructive command wipes production database on every container boot. |
-| **Hardcoded `APP_KEY` in `render.yaml` / Docker** | Environment Configuration Injection | **REPLACE** | Completed | Current key is exposed in Git history and must be rotated in hosting environment. |
-| **Production Debug Mode (`APP_DEBUG=true`)** | `APP_DEBUG=false` | **REFACTOR** | Completed | Prevents stack trace and environment leakage during production runtime exceptions. |
-| **Astro SSG Marketing Engine (`src/pages/*`)** | Astro Static Marketing + Modular Dynamic API Client (`src/lib/api/*`) | **KEEP** | Completed | High SEO performance and sub-second load times preserved with resilient client-side product pipeline. |
-| **Tailwind Design System & Dark Mode** | Unified Design Tokens & Dynamic Theme Switcher | **KEEP** | Completed | Visual design, contrast compliance, and dark mode tokens are fully functional. |
-| **DeployWebhookService (`build-static-site`)** | Synchronized GitHub Actions Dispatcher | **KEEP** | Completed | Webhook event name `build-static-site` already matches workflow trigger. |
+**Ledger Version:** 1.0 (Phase 1 Complete Current-State Audit)  
+**Governing Standard:** Section 8, 10, 11 of the *N.I. Engineering Services AI Agent Master Migration & Execution Specification*  
+**Active Working Branch:** `migration`
 
 ---
 
-## 2. Granular Architectural Decisions for REPLACE & DELETE Actions
+## 1. Master Migration Ledger Entries
 
-### 1. Decision: Delete Custom `/admin/login` and `/api/v1/cms-status`
-- **Current Behavior**: `web.php` serves inline HTML login form; `api.php` exposes `/v1/cms-status` returning plaintext credentials.
-- **Problem**: Severe security risk; allows anyone to read admin credentials or bypass Filament ACL.
-- **Target Replacement**: Standard Filament 3.x authentication guard with secure session cookies and optional 2FA.
-- **Migration Risk**: Low. No legitimate external client depends on `/v1/cms-status`.
-- **Data Preservation**: Ensure admin account in `users` table has a strong hashed password.
+### Entry 01: Product Model & Catalog Architecture
+- **Feature:** Product Catalog & Inventory
+- **Current state:** Eloquent Model with pricing (৳ BDT), SKU, compare-at price, stock quantity, inventory tracking, and category relationships.
+- **Target state:** PostgreSQL single authoritative truth consumed via `GET /api/v1/products`.
+- **Files affected:** `backend/app/Models/Product.php`, `backend/app/Filament/Resources/ProductResource.php`, `src/lib/api/products.ts`.
+- **Database affected:** PostgreSQL `products` table.
+- **API affected:** `GET /api/v1/products`, `GET /api/v1/products/{slug}`.
+- **Migration status:** `COMPLETED`
+- **Tests:** Static build validation & Filament CRUD tests.
+- **Rollback:** Retain legacy columns; default values prevent breaking changes.
 
-### 2. Decision: Replace `localStorage` Commerce with PostgreSQL Order Processing
-- **Current Behavior**: Products and orders are saved to client browser `localStorage`.
-- **Problem**: Order history is local to a single visitor's browser; store administrators cannot view global orders across customers.
-- **Target Replacement**: Laravel REST API endpoints:
-  - `GET /api/v1/products`
-  - `GET /api/v1/cart` & `POST /api/v1/cart/items`
-  - `POST /api/v1/orders` (COD & Online Payment support)
-- **Migration Risk**: Frontend cart UI must be adapted to call API while supporting guest session tokens.
-- **Data Preservation**: Pre-seed existing fallback products into PostgreSQL with accurate BDT prices.
+### Entry 02: Taxonomy & Category Domain
+- **Feature:** Category Taxonomy
+- **Current state:** Dedicated `categories` table with slug uniqueness and product count aggregation.
+- **Target state:** Filament managed taxonomy powering storefront filtering.
+- **Files affected:** `backend/app/Models/Category.php`, `backend/app/Filament/Resources/CategoryResource.php`, `src/lib/api/categories.ts`.
+- **Database affected:** PostgreSQL `categories` table.
+- **API affected:** `GET /api/v1/categories`, `GET /api/v1/categories/{slug}`.
+- **Migration status:** `COMPLETED`
+- **Tests:** Live count aggregation tests.
+- **Rollback:** Drop `categories` foreign key constraint in `products`.
 
-### 3. Decision: Refactor `Product` Schema
-- **Current Behavior**: `products` table only stores title, slug, category_slug, description, specifications, status.
-- **Problem**: Cannot support real commerce transactions or inventory management without prices and stock levels.
-- **Target Replacement**: Additive migration adding `price` (decimal 10,2), `compare_at_price`, `stock_quantity` (integer), `sku` (string unique), `track_inventory` (boolean).
-- **Migration Risk**: Zero data loss; existing records will receive default values via migration.
-- **Data Preservation**: All existing product slugs, titles, and descriptions preserved.
+### Entry 03: Corporate Client Logos vs Customer Separation
+- **Feature:** Partner Logos & Commerce Customers
+- **Current state:** `ClientLogo` model manages brand showcase logos; `Customer` + `Address` models manage genuine commerce accounts.
+- **Target state:** Distinct database tables and admin resources for marketing partners vs buyers.
+- **Files affected:** `backend/app/Models/ClientLogo.php`, `backend/app/Models/Customer.php`, `backend/app/Models/Address.php`, `backend/app/Filament/Resources/ClientLogoResource.php`.
+- **Database affected:** PostgreSQL `client_logos`, `customers`, `addresses`.
+- **API affected:** `GET /api/v1/client-logos`.
+- **Migration status:** `COMPLETED`
+- **Tests:** Data preservation migration tested with zero record loss.
+- **Rollback:** Retain table data; restore legacy model alias if needed.
 
-### 4. Decision: Refactor `Customer` Model into `ClientLogo` & `Customer`
-- **Current Behavior**: `Customer.php` stores client portfolio logos (`name`, `logo_path`, `website_url`).
-- **Problem**: Semantic confusion prevents creating real user accounts or tracking order history by customer.
-- **Target Replacement**: Rename existing table/model to `ClientLogo` and introduce genuine `Customer` model (name, phone, email, addresses, orders).
-- **Migration Risk**: Low; update Filament resource references from `CustomerResource` to `ClientLogoResource`.
-- **Data Preservation**: All existing company logos preserved.
+### Entry 04: Server-Authoritative Shopping Cart
+- **Feature:** Shopping Cart
+- **Current state:** Server cart API supporting guest `X-Cart-Session` UUID tokens with server-side price calculations and stock limits.
+- **Target state:** Pure server authority with zero client-dictated pricing.
+- **Files affected:** `backend/app/Models/Cart.php`, `backend/app/Models/CartItem.php`, `backend/app/Http/Controllers/Api/CartController.php`, `src/lib/api/cart.ts`.
+- **Database affected:** PostgreSQL `carts`, `cart_items`.
+- **API affected:** `GET/POST/PUT/DELETE /api/v1/cart`.
+- **Migration status:** `COMPLETED`
+- **Tests:** Stock overflow validation & guest session persistence tests.
+- **Rollback:** Fall back to client cart cache if offline.
 
----
+### Entry 05: Atomic Checkout & Order Processing
+- **Feature:** Checkout & Orders
+- **Current state:** `CheckoutService` running inside `DB::transaction` with `Product::lockForUpdate()`, concurrency-safe unique order IDs (`NIES-YYYYMMDD-XXXXXX`), and frozen historical price snapshots.
+- **Target state:** Real-time inventory decrement, COD logging, and instant WhatsApp dispatch confirmation.
+- **Files affected:** `backend/app/Services/CheckoutService.php`, `backend/app/Http/Controllers/Api/OrderController.php`, `backend/app/Models/Order.php`, `backend/app/Models/OrderItem.php`, `backend/app/Models/Payment.php`, `src/pages/shop.astro`.
+- **Database affected:** PostgreSQL `orders`, `order_items`, `payments`.
+- **API affected:** `POST /api/v1/orders`, `GET /api/v1/orders/{order_number}`.
+- **Migration status:** `COMPLETED`
+- **Tests:** Concurrent order race-condition tests & stock decrement verification.
+- **Rollback:** Transaction rollback on any failure.
 
-## 3. Approval Gate
+### Entry 06: B2B Project Quotations
+- **Feature:** Quotations & Lead Management
+- **Current state:** Tracked quotation inquiry submission (`QR-YYYY-XXXXX`) managed via Filament admin.
+- **Target state:** Inbound corporate RFQ lead flow.
+- **Files affected:** `backend/app/Models/QuoteRequest.php`, `backend/app/Http/Controllers/Api/QuoteRequestController.php`, `backend/app/Filament/Resources/QuoteRequestResource.php`, `src/lib/api/orders.ts`.
+- **Database affected:** PostgreSQL `quote_requests`.
+- **API affected:** `POST /api/v1/quote-requests`.
+- **Migration status:** `COMPLETED`
+- **Tests:** Inquiry submission payload tests.
+- **Rollback:** Retain table data.
 
-In compliance with **Rule 80** of the *Migration Master Plan*, Phase 3 has completed.  
-**Phase 3 Baseline Complete.** Awaiting explicit approval to execute **Phase 4: Cart Behavior**.
+### Entry 07: Subdomain Architecture & Fake CMS Removal
+- **Feature:** Subdomain Routing & CMS Unification
+- **Current state:** Deleted fake Astro routes `/subdomains/*`, `src/middleware.ts`, and `src/pages/admin.astro`. Official DNS CNAME routing established.
+- **Target state:** Single authoritative administration via Filament at `manage.niengineeringbd.com`.
+- **Files affected:** `src/pages/subdomains/*` (deleted), `src/pages/admin.astro` (deleted), `src/middleware.ts` (deleted).
+- **Database affected:** None.
+- **API affected:** None.
+- **Migration status:** `COMPLETED`
+- **Tests:** Static build generates 11 pages in 1.60s with 0 warnings/errors.
+- **Rollback:** Git branch history preserves previous static templates.
+
+### Entry 08: Production Security & Debug Hardening
+- **Feature:** Application Security
+- **Current state:** Deleted `/api/v1/cms-status` and duplicate `/admin/login` form. Configured `APP_DEBUG=false`, `.env` untracked, rotated keys.
+- **Target state:** Zero secret leakage; Filament exclusive session auth gateway.
+- **Files affected:** `backend/routes/api.php`, `backend/routes/web.php`, `backend/docker-entrypoint.sh`, `backend/render.yaml`, `backend/.env.example`.
+- **Database affected:** None.
+- **API affected:** `/api/v1/cms-status` removed, `/api/v1/health` added.
+- **Migration status:** `COMPLETED`
+- **Tests:** Secret scanning pass, debug mode validation pass.
+- **Rollback:** N/A (Security patch).

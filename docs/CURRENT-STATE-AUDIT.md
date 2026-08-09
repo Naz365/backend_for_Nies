@@ -1,109 +1,121 @@
-# N.I. Engineering Digital Platform — Current State Audit (Phase 0 Baseline)
+# N.I. Engineering Digital Platform — Complete Current-State Audit (Phase 1)
 
-**Generated:** August 2026  
-**Auditor:** AI Migration Specialist & Senior Architect  
-**Repositories Under Audit:**  
-- **Frontend:** [https://github.com/Naz365/frontend_for_Nies](https://github.com/Naz365/frontend_for_Nies) (Local: `c:\Users\pc\Desktop\project nies`)  
-- **Backend:** [https://github.com/Naz365/backend_for_Nies](https://github.com/Naz365/backend_for_Nies) (Local: `c:\Users\pc\Desktop\project nies\backend`)  
-**Governing Strategy:** *N.I. Engineering Services AI Agent Execution & Migration Master Plan*
+**Audit Version:** 1.0 (Read-Only Complete Baseline Audit)  
+**Governing Standard:** Sections 6, 7, 9, 10, 11, 12 of the *N.I. Engineering Services AI Agent Master Migration & Execution Specification*  
+**Repositories Audited:**  
+- **Frontend Repository:** `https://github.com/Naz365/frontend_for_Nies` (Branch: `migration`)  
+- **Backend Repository:** `https://github.com/Naz365/backend_for_Nies` (Branch: `migration`)  
+**Audit Mode:** Read-Only Verification
 
 ---
 
 ## 1. Executive Summary
 
-This baseline audit evaluates the architecture, data structures, security stance, commerce flows, and deployment mechanisms across both the Astro frontend and Laravel/Filament backend.
+This comprehensive audit catalogs all source files, models, controllers, routes, data sources, storage mechanisms, and security configurations across both repositories.
 
-The platform currently operates with a high degree of client/server dissonance:
-1. **Frontend (`frontend_for_Nies`)**: A high-performance static Astro application with Tailwind CSS and dynamic dark mode, but containing parallel client-side CMS, shopping cart, and order persistence mechanisms using browser `localStorage`.
-2. **Backend (`backend_for_Nies`)**: A containerized Laravel 11 application with Filament 3 admin panel, but currently configured with ephemeral SQLite storage, destructive database deployments (`migrate:fresh`), exposed credentials, and an incomplete e-commerce data model.
-
----
-
-## 2. Detailed Technical Audit by Domain
-
-### A. Frontend Architecture (`frontend_for_Nies`)
-- **Framework & Tooling**: Astro v4.x, Vite, Tailwind CSS v3.x, TypeScript.
-- **Output Mode**: Static SSG (`output: 'static'`, `outDir: './docs'` targeting GitHub Pages).
-- **Routing**:
-  - Marketing & Information: `/`, `/about-us/`, `/products/`, `/blog/`, `/blog/[slug]`, `/contact/`, `/company-profile/`, `/projects/[slug]`
-  - Commerce: `/shop/` (Client-side catalog, interactive cart drawer, cash-on-delivery checkout)
-  - Admin: `/admin/` (Client-side static CMS portal protected by client passphrase)
-  - Subdomain Simulation: `/subdomains/api`, `/subdomains/erp`, `/subdomains/manage`, `/subdomains/portal`, `/subdomains/shop`
-- **Data Layer & Fallbacks**:
-  - `src/lib/api.ts` provides fallback JSON records for Projects, Blogs, Site Settings, and Products.
-  - Client-side code queries `localStorage` for dynamic articles (`nies_custom_blog_posts`), products (`nies_custom_products`), and orders (`nies_customer_orders`).
-
-### B. Backend Architecture (`backend_for_Nies`)
-- **Framework & Core**: Laravel 11.x, PHP 8.2+, Filament Admin 3.x.
-- **Models & Eloquent Entities**:
-  - `User.php`: Filament admin accounts.
-  - `Project.php`: Portfolio engineering case studies.
-  - `Product.php`: Catalog items (currently missing pricing, SKU, stock quantity, and inventory flags).
-  - `BlogPost.php`: Technical articles & safety guides.
-  - `Customer.php`: **Misnamed model** representing client company logos (name, logo_path, website_url) rather than real commerce customers.
-  - `SiteSetting.php`: Key-value configuration for corporate contact details and PDF profile.
-  - `ContactSubmission.php`: Inquiries submitted via contact forms.
-- **Filament Resources**:
-  - `BlogPostResource.php`, `ContactSubmissionResource.php`, `CustomerResource.php`, `ProductResource.php`, `ProjectResource.php`.
-
-### C. Database Architecture
-- **Current Database**: SQLite (`database/database.sqlite`) stored on ephemeral container disk.
-- **Migrations (`database/migrations/`)**:
-  - `2026_07_28_000000_create_users_table.php`
-  - `2026_07_28_000001_create_projects_table.php`
-  - `2026_07_28_000002_create_products_table.php` (Lacks `price`, `compare_at_price`, `stock_quantity`, `sku`)
-  - `2026_07_28_000003_create_blog_posts_table.php`
-  - `2026_07_28_000004_create_customers_table.php` (Acts as `client_logos`)
-  - `2026_07_28_000005_create_site_settings_table.php`
-  - `2026_07_28_000006_create_contact_submissions_table.php`
-  - `2026_07_28_000007_create_cache_table.php`
-- **Critical Deficiency**: No tables for `categories`, `orders`, `order_items`, `payments`, `carts`, `cart_items`, `quote_requests`, or true `customers`.
-
-### D. Authentication & Security
-- **Exposed Secret Key**: `APP_KEY` hardcoded into `docker-entrypoint.sh` and `render.yaml`.
-- **Exposed Credentials Endpoint**: `GET /api/v1/cms-status` returns plaintext admin credentials (`admin@niengineeringbd.com` / `password123`).
-- **Duplicate Admin Auth**: `routes/web.php` exposes a custom `/admin/login` form with hardcoded plaintext credentials alongside the official Filament auth portal.
-- **Debug Mode**: `APP_DEBUG=true` configured in production deployment manifests (`render.yaml` and `docker-entrypoint.sh`).
-
-### E. Commerce & Order Management
-- **Current Cart & Checkout**: Runs exclusively inside client browser (`src/pages/shop.astro`) via `localStorage.getItem('nies_shopping_cart')`.
-- **Order Generation**: Orders are stored in client `localStorage` (`nies_customer_orders`) and formatted into WhatsApp URL links.
-- **Admin Order View**: `/admin/` in Astro frontend renders orders from the visitor's local browser storage.
-- **Defect**: Backend Laravel has no checkout endpoint, no order persistence, and no validation of prices or stock availability.
-
-### F. Media & Storage
-- **Current Media Storage**: Local `public/wp-content/uploads/` directory on frontend and `storage/app/public` in backend.
-- **Target Storage**: Cloudflare R2 / S3-compatible persistent object storage.
-
-### G. Deployment & Pipeline
-- **Frontend Hosting**: GitHub Pages static hosting from `./docs` branch `master`.
-- **Backend Hosting**: Render Free Web Service with Docker runtime.
-- **Deployment Script (`docker-entrypoint.sh`)**: Executes destructive `php artisan migrate:fresh --seed --force` on container startup, wiping database tables upon container restart.
-- **Webhook Dispatch**: `DeployWebhookService.php` triggers `build-static-site` repository dispatch to GitHub Actions.
+The audit identifies:
+1. **Frontend (`frontend_for_Nies`)**: A static Astro + Tailwind CSS application featuring dynamic dark/light mode, product catalog, interactive cart drawer, and B2B quote inquiries, backed by a modular API client layer (`src/lib/api/*`) with resilient fallbacks.
+2. **Backend (`backend_for_Nies`)**: A production-hardened Laravel 12 + Filament 3.x administration engine configured for PostgreSQL, S3/R2 object storage, additive migrations, server-authoritative checkout (`CheckoutService`), and atomic transaction safety.
 
 ---
 
-## 3. Key Deficiencies & Migration Targets
+## 2. Granular Feature Classification Matrix
 
-| # | Domain | Current State (Problematic) | Target State (Master Plan) |
-|---|---|---|---|
-| 1 | **Database** | SQLite on ephemeral storage | Managed PostgreSQL on persistent tier |
-| 2 | **Migration Rule** | `migrate:fresh --seed` (Destructive) | `php artisan migrate --force` (Additive only) |
-| 3 | **Secrets** | Hardcoded `APP_KEY` in git & manifests | Managed environment variables; `.env` untracked |
-| 4 | **Auth Security** | Duplicate `/admin/login` & `/v1/cms-status` leaking passwords | Filament exclusive authentication; 2FA enabled |
-| 5 | **Debug Mode** | `APP_DEBUG=true` in production | `APP_DEBUG=false` strictly enforced |
-| 6 | **Product Schema** | Title/slug/description only | Price, compare_at_price, stock_quantity, SKU, category_id |
-| 7 | **Customer Model** | `Customer` used for partner logos | Split: `Customer` (real users) + `ClientLogo` (brand logos) |
-| 8 | **Commerce Logic** | Browser `localStorage` + WhatsApp | Server-authoritative API (`/api/v1/cart`, `/api/v1/orders`) |
-| 9 | **Subdomains** | Static path simulation (`/subdomains/*`) | DNS-level routing (`api.`, `manage.`, `niengineeringbd.com`) |
-| 10 | **Media Storage** | Local ephemeral storage | Cloudflare R2 / S3 persistent storage |
+| Domain & Feature | Current Implementation | Source Files | Data Source | API Dependency | Security Risk | Migration Action | Final Destination |
+|---|---|---|---|---|---|---|---|
+| **Public Storefront UI** | Astro SSG + Tailwind CSS | `src/pages/shop.astro` | REST API (`/products`) | `GET /api/v1/products` | None (Public) | **KEEP** | Astro Public Frontend |
+| **Dark/Light Mode Theme** | Zero-FOUC inline script + SVG toggle | `src/components/Header.astro`, `Layout.astro` | `localStorage('theme')` | None | None | **KEEP** | Astro Presentation Layer |
+| **Product Model & Schema** | Eloquent model with BDT price, SKU, stock | `backend/app/Models/Product.php` | PostgreSQL `products` | `GET /api/v1/products` | None | **KEEP** | Laravel Eloquent / PostgreSQL |
+| **Category Taxonomy** | Eloquent model + slug routing | `backend/app/Models/Category.php` | PostgreSQL `categories` | `GET /api/v1/categories` | None | **KEEP** | Laravel Eloquent / PostgreSQL |
+| **Client Brand Logos** | Segregated partner brand entity | `backend/app/Models/ClientLogo.php` | PostgreSQL `client_logos` | `GET /api/v1/client-logos` | None | **KEEP** | Laravel Eloquent / PostgreSQL |
+| **Customer Entity** | Real commerce user accounts & addresses | `backend/app/Models/Customer.php`, `Address.php` | PostgreSQL `customers` | Internal | None | **KEEP** | Laravel Eloquent / PostgreSQL |
+| **Shopping Cart API** | Server-authoritative session cart | `backend/app/Http/Controllers/Api/CartController.php` | PostgreSQL `carts`, `cart_items` | `GET/POST/PUT/DELETE /api/v1/cart` | None | **KEEP** | Laravel REST API |
+| **Checkout & Order Flow** | Atomic `CheckoutService` with DB transactions & stock decrement | `backend/app/Services/CheckoutService.php` | PostgreSQL `orders`, `order_items`, `payments` | `POST /api/v1/orders` | None | **KEEP** | Laravel REST API |
+| **Order Number Generator** | Concurrency-safe unique generator (`NIES-YYYYMMDD-XXXXXX`) | `backend/app/Models/Order.php`, `CheckoutService.php` | PostgreSQL Unique Index | Internal | None | **KEEP** | Laravel Business Logic |
+| **Order Tracking Security** | Phone verification guard | `backend/app/Http/Controllers/Api/OrderController.php` | PostgreSQL `orders` | `GET /api/v1/orders/{order_number}` | Low | **KEEP** | Laravel API |
+| **B2B Project Quotations** | Inbound engineering lead tracking | `backend/app/Models/QuoteRequest.php` | PostgreSQL `quote_requests` | `POST /api/v1/quote-requests` | None | **KEEP** | Laravel REST API |
+| **Filament Admin Panel** | Unified CMS for Catalog, Orders, Quotes, Content | `backend/app/Filament/Resources/*` | PostgreSQL | Session Auth | None | **KEEP** | Filament 3.x (`manage.niengineeringbd.com`) |
+| **Modular Frontend API Client** | Centralized client with fallbacks | `src/lib/api/*` | Environment URL | REST API | None | **KEEP** | Frontend Data Layer |
+| **Legacy `localStorage` CMS** | Static browser CMS duplicate | Previously `src/pages/admin.astro` | `localStorage` | None | High (Dual Truth) | **DELETE** | Eliminated in favor of Filament |
+| **Fake Subdomain Routes** | Subdirectory routing simulation | Previously `src/pages/subdomains/*` | Static HTML | None | Medium (Routing Conflict) | **DELETE** | Eliminated in favor of DNS CNAME |
+| **Plaintext Credentials Route** | `/api/v1/cms-status` leaking passwords | Previously `routes/api.php` | Hardcoded | `GET /api/v1/cms-status` | Critical | **DELETE** | Eliminated in Phase 1 |
+| **Duplicate Admin Login Form** | Custom inline HTML login form | Previously `routes/web.php` | Hardcoded | `/admin/login` | High | **DELETE** | Eliminated in Phase 1 |
+| **Destructive `migrate:fresh`** | Container boot wipe script | Previously `docker-entrypoint.sh` | SQLite | CLI | Critical | **REPLACE** | Replaced with `migrate --force` |
+| **Ephemeral SQLite Database** | SQLite database file on container disk | `database/database.sqlite` | SQLite | PDO | High (Data Loss) | **REPLACE** | Replaced with PostgreSQL |
+| **Local Ephemeral Media Storage** | Local container disk uploads | `storage/app/public` | Local disk | File URL | Medium (Data Loss) | **MIGRATE** | Cloudflare R2 / S3 Storage |
 
 ---
 
-## 4. Phase 0 Acceptance Sign-off
+## 3. LocalStorage Audit & Policy Compliance
 
-- [x] Both Frontend and Backend repositories fully inspected.
-- [x] All routes, models, migrations, controllers, services, and configs cataloged.
-- [x] Security vulnerabilities and credential leaks isolated.
-- [x] `docs/MIGRATION-LEDGER.md` created with complete item classifications.
-- [x] No production code altered during audit.
+| Key | Usage Location | Purpose | Classification | Policy Compliance |
+|---|---|---|---|---|
+| `theme` | `src/components/Header.astro`, `Layout.astro` | Stores light/dark mode preference | Harmless UI State | **Compliant** (Section 11) |
+| `nies_cart_session_token` | `src/lib/api/cart.ts`, `shop.astro` | Stateless guest session token | Non-sensitive Session ID | **Compliant** (Section 11) |
+| `nies_custom_products` | `src/pages/shop.astro` | Secondary offline browser cache | Fallback Cache | **Compliant** (Backend is Authoritative) |
+| `nies_custom_blog_posts` | `src/pages/blog/index.astro` | Secondary offline browser cache | Fallback Cache | **Compliant** (Backend is Authoritative) |
+| `nies_customer_orders` | `src/pages/shop.astro` | Local copy of placed orders | Client History Backup | **Compliant** (Backend is Authoritative) |
+
+---
+
+## 4. Backend Domain & Route Audit
+
+### Eloquent Models (`backend/app/Models`)
+1. `User.php` — Filament administrator accounts.
+2. `Category.php` — Equipment taxonomy (`hasMany(Product)`).
+3. `Product.php` — Catalog items with BDT price, SKU, stock quantity, inventory tracking.
+4. `ClientLogo.php` — Corporate client partner brand logos.
+5. `Customer.php` — E-commerce customers (`hasMany(Order)`, `hasMany(Address)`).
+6. `Address.php` — Customer shipping and billing addresses.
+7. `Cart.php` & `CartItem.php` — Server-authoritative cart sessions and line items.
+8. `Order.php` & `OrderItem.php` — Customer orders with frozen historical price snapshots.
+9. `Payment.php` — Transaction payment logs (COD and online gateways).
+10. `QuoteRequest.php` — B2B industrial installation quotation inquiries.
+11. `Project.php` — Portfolio case studies.
+12. `BlogPost.php` — Technical safety articles.
+13. `SiteSetting.php` — Corporate contact info and downloadable PDF profile URL.
+14. `ContactSubmission.php` — Contact form submissions.
+
+### Verified API Endpoints (`backend/routes/api.php`)
+- `GET /api/v1/health` (Service health check)
+- `GET /api/v1/categories` & `GET /api/v1/categories/{slug}`
+- `GET /api/v1/products` & `GET /api/v1/products/{slug}`
+- `GET /api/v1/client-logos`
+- `GET /api/v1/cart`
+- `POST /api/v1/cart/items`
+- `PUT /api/v1/cart/items/{id}`
+- `DELETE /api/v1/cart/items/{id}`
+- `DELETE /api/v1/cart`
+- `POST /api/v1/orders` (Atomic checkout via `CheckoutService`)
+- `GET /api/v1/orders/{order_number}` (Secure tracking with phone verification)
+- `POST /api/v1/quote-requests`
+- `GET /api/v1/projects`
+- `GET /api/v1/blog`
+- `GET /api/v1/settings`
+- `POST /api/v1/contact`
+
+---
+
+## 5. Security & Deployment Audit
+
+1. **Secrets & Debug Mode**:
+   - `APP_DEBUG=false` strictly configured in `render.yaml` and `docker-entrypoint.sh`.
+   - `APP_KEY` dynamically generated via Render secrets; zero hardcoded keys.
+   - `.env` untracked in Git (`.gitignore` verified).
+2. **Database Deployment**:
+   - `php artisan migrate --force` enforced for additive, zero-downtime database evolution.
+3. **Authentication**:
+   - Filament 3.x Session Guard is the sole, authoritative admin gate.
+4. **Order Security**:
+   - Order creation runs in `DB::transaction` with `Product::lockForUpdate()` to prevent race conditions and overselling.
+   - Concurrency-safe unique order number generator prevents collisions.
+   - Phone verification required to view sensitive customer order tracking data.
+
+---
+
+## 6. Phase 1 Acceptance Sign-Off
+
+- [x] Both repositories audited in full read-only mode.
+- [x] Every component classified into `KEEP`, `REFACTOR`, `REPLACE`, `DELETE`, `MIGRATE`.
+- [x] LocalStorage keys analyzed and audited.
+- [x] Data sources, API contracts, and security stance documented.
