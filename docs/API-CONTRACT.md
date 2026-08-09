@@ -1,54 +1,90 @@
 # N.I. Engineering Digital Platform — REST API Contract Specification (v1)
 
-**Document Version:** 1.0 (Phase 3 Admin Catalog Vertical Slice)  
-**Governing Standard:** Sections 28, 29, 30, 80 of the *N.I. Engineering Services AI Agent Execution & Migration Master Plan*  
+**Document Version:** 1.0 (Phase 5 — API Contract Standardized)  
+**Governing Standard:** Sections 22, 23, 28, 57 of the *N.I. Engineering Services AI Agent Master Migration & Execution Specification*  
 **Base URL (Production):** `https://api.niengineeringbd.com/api/v1`  
+**Base URL (Staging):** `https://api-staging.niengineeringbd.com/api/v1`  
 **Data Format:** JSON (`application/json`)  
-**Character Encoding:** UTF-8
+**Character Encoding:** UTF-8  
+**Active Working Branch:** `migration`
 
 ---
 
-## 1. Global Response Schema & Standards
+## 1. Global API Response Standards & Schema Envelope
 
-### Standard Success Envelope
+All v1 endpoints adhere to the standardized response envelope structure:
+
+### Standard Success Response Schema
 ```json
 {
-  "success": true,
   "data": { ... },
-  "pagination": {
+  "meta": {
     "total": 50,
     "per_page": 20,
     "current_page": 1,
     "last_page": 3
+  },
+  "message": "Operation completed successfully",
+  "errors": null
+}
+```
+
+### Standard Error Response Schema
+```json
+{
+  "data": null,
+  "meta": null,
+  "message": "Validation error or resource not found",
+  "errors": {
+    "field_name": ["Specific validation error message."]
   }
 }
 ```
 
-### Standard Error Envelope
+### Standard HTTP Status Codes
+| Status Code | Description | Usage Scenario |
+|---|---|---|
+| **`200 OK`** | Request succeeded | Standard GET, PUT, DELETE responses |
+| **`201 Created`** | Resource created | Order created, Quote request submitted |
+| **`400 Bad Request`** | Malformed request | Corrupt JSON or invalid syntax |
+| **`401 Unauthenticated`** | Authentication required | Protected admin actions |
+| **`403 Forbidden`** | Authorization failed | Access denied / Phone mismatch on order tracking |
+| **`404 Not Found`** | Resource missing | Unknown product slug or order number |
+| **`409 Conflict`** | Resource state conflict | Concurrent stock contention |
+| **`422 Unprocessable Entity`** | Validation failure | Out of stock or missing required fields |
+| **`429 Too Many Requests`** | Rate limit exceeded | Form spam throttling (5 req/min) |
+| **`500 Server Error`** | Server runtime error | Unhandled system exception |
+
+---
+
+## 2. Verified REST API Endpoints Matrix
+
+### A. Health & Diagnostics
+#### `GET /api/v1/health`
+- **Auth:** Public
+- **Response (`200 OK`):**
 ```json
 {
-  "success": false,
-  "message": "Resource not found or validation error",
-  "errors": {
-    "field_name": ["Specific error detail"]
-  }
+  "data": {
+    "status": "healthy",
+    "service": "N.I. Engineering API",
+    "timestamp": "2026-08-09T20:38:00+06:00"
+  },
+  "meta": null,
+  "message": null,
+  "errors": null
 }
 ```
 
 ---
 
-## 2. Catalog & Taxonomy Endpoints
-
-### `GET /api/v1/categories`
-Retrieves all active product categories with live published product counts.
-
-- **Authentication:** Public
-- **HTTP Method:** `GET`
-- **Query Parameters:** None
-- **Success Response (`200 OK`):**
+### B. Taxonomy & Categories
+#### `GET /api/v1/categories`
+- **Auth:** Public
+- **Description:** Returns active categories with live published product counts.
+- **Response (`200 OK`):**
 ```json
 {
-  "success": true,
   "data": [
     {
       "id": 1,
@@ -60,50 +96,32 @@ Retrieves all active product categories with live published product counts.
       "sort_order": 1,
       "products_count": 6
     }
-  ]
+  ],
+  "meta": null,
+  "message": null,
+  "errors": null
 }
 ```
 
----
-
-### `GET /api/v1/categories/{slug}`
-Retrieves a single category by slug along with its published products.
-
-- **Authentication:** Public
-- **HTTP Method:** `GET`
-- **Path Parameters:**
-  - `slug` (string, required): Category slug (e.g. `fire-extinguishers`)
-- **Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "name": "Fire Extinguishers",
-    "slug": "fire-extinguishers",
-    "products": [ ... ]
-  }
-}
-```
+#### `GET /api/v1/categories/{slug}`
+- **Auth:** Public
+- **Response (`200 OK`):** Returns category detail with nested published products.
 
 ---
 
-### `GET /api/v1/products`
-Retrieves paginated equipment products with live prices in ৳ BDT and stock availability.
-
-- **Authentication:** Public
-- **HTTP Method:** `GET`
+### C. Product Catalog & Inventory
+#### `GET /api/v1/products`
+- **Auth:** Public
 - **Query Parameters:**
-  - `category` (string, optional): Filter by category slug (e.g. `fire-extinguishers`)
-  - `q` / `search` (string, optional): Keyword search matching product title, SKU, description, specifications
-  - `featured` (boolean, optional): `1` or `true` to filter featured items
-  - `in_stock` (boolean, optional): `1` or `true` to filter available stock
-  - `sort` (string, optional): `featured` (default), `price-low`, `price-high`, `newest`
-  - `per_page` (integer, optional): Items per page (default: `50`, max: `100`)
-- **Success Response (`200 OK`):**
+  - `category` (string, optional): Filter by category slug
+  - `q` / `search` (string, optional): Keyword search matching title, description, SKU, specifications
+  - `featured` (boolean, optional): Filter featured items (`1` or `true`)
+  - `in_stock` (boolean, optional): Filter in-stock items (`1` or `true`)
+  - `sort` (string, optional): `featured`, `price-low`, `price-high`, `newest`
+  - `per_page` (integer, optional): Items per page (default: 50)
+- **Response (`200 OK`):**
 ```json
 {
-  "success": true,
   "data": [
     {
       "id": 1,
@@ -128,65 +146,30 @@ Retrieves paginated equipment products with live prices in ৳ BDT and stock ava
       }
     }
   ],
-  "pagination": {
+  "meta": {
     "total": 8,
     "per_page": 50,
     "current_page": 1,
     "last_page": 1
-  }
+  },
+  "message": null,
+  "errors": null
 }
 ```
 
----
-
-### `GET /api/v1/products/{slug}`
-Retrieves complete product details for individual product view.
-
-- **Authentication:** Public
-- **HTTP Method:** `GET`
-- **Path Parameters:**
-  - `slug` (string, required): Product slug or ID
-- **Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "sku": "EXT-ABC-6KG",
-    "title": "ABC Dry Chemical Powder Extinguisher (6kg)",
-    "slug": "abc-dry-powder-extinguisher-6kg",
-    "price": "1450.00",
-    "compare_at_price": "1800.00",
-    "stock_quantity": 100,
-    "track_inventory": true,
-    "description": "Multipurpose Class A, B, C fire extinguisher filled with 90% MAP powder.",
-    "specifications": "<p>Certified under BFSCD standard. Nitrogen pressurized to 14-15 bar.</p>",
-    "category": {
-      "id": 1,
-      "name": "Fire Extinguishers",
-      "slug": "fire-extinguishers"
-    }
-  }
-}
-```
+#### `GET /api/v1/products/{slug}`
+- **Auth:** Public
+- **Response (`200 OK`):** Returns single product with HTML specifications and inventory balance.
 
 ---
 
-## 3. Shopping Cart Endpoints (Server-Authoritative)
-
-### Session Header Requirement
-All Cart API requests accept an optional `X-Cart-Session` header containing a UUID token. If omitted, the server automatically generates one and returns it in the response payload.
-
-### `GET /api/v1/cart`
-Retrieves current shopping cart, items, live product prices, and calculated subtotal.
-
-- **Authentication:** Public (Guest Session / Token)
-- **HTTP Method:** `GET`
+### D. Server-Authoritative Shopping Cart
+#### `GET /api/v1/cart`
+- **Auth:** Public (Session Token)
 - **Headers:** `X-Cart-Session: <uuid>`
-- **Success Response (`200 OK`):**
+- **Response (`200 OK`):**
 ```json
 {
-  "success": true,
   "data": {
     "cart_id": 12,
     "session_token": "nies_guest_9f8d1e2a",
@@ -207,73 +190,32 @@ Retrieves current shopping cart, items, live product prices, and calculated subt
     "item_count": 2,
     "subtotal": 2900.00,
     "currency": "BDT"
-  }
+  },
+  "meta": null,
+  "message": null,
+  "errors": null
 }
 ```
 
+#### `POST /api/v1/cart/items`
+- **Request Body:** `{"product_id": 1, "quantity": 1}`
+- **Response (`200 OK`):** Returns updated cart payload.
+- **Stock Error (`422 Unprocessable Entity`):** `{"message": "Insufficient stock."}`
+
+#### `PUT /api/v1/cart/items/{id}`
+- **Request Body:** `{"quantity": 3}` (Passing `0` removes item)
+- **Response (`200 OK`):** Returns updated cart payload.
+
+#### `DELETE /api/v1/cart/items/{id}` & `DELETE /api/v1/cart`
+- **Response (`200 OK`):** Returns updated / emptied cart payload.
+
 ---
 
-### `POST /api/v1/cart/items`
-Adds an item to the shopping cart. Server enforces inventory limits and validates price.
-
-- **Authentication:** Public
-- **HTTP Method:** `POST`
+### E. Checkout & Orders (Transaction-Safe)
+#### `POST /api/v1/orders`
+- **Auth:** Public (Session Token)
 - **Headers:** `X-Cart-Session: <uuid>`, `Content-Type: application/json`
 - **Request Body:**
-```json
-{
-  "product_id": 1,
-  "quantity": 1
-}
-```
-- **Success Response (`200 OK`):** Returns refreshed cart object.
-- **Stock Error (`422 Unprocessable Entity`):**
-```json
-{
-  "success": false,
-  "message": "Insufficient stock. Only 5 units available."
-}
-```
-
----
-
-### `PUT /api/v1/cart/items/{id}`
-Updates the quantity of an item in the cart. If quantity is `0`, item is removed.
-
-- **Authentication:** Public
-- **HTTP Method:** `PUT`
-- **Request Body:** `{"quantity": 3}`
-- **Success Response (`200 OK`):** Returns refreshed cart object.
-
----
-
-### `DELETE /api/v1/cart/items/{id}`
-Removes a specific line item from the cart.
-
-- **Authentication:** Public
-- **HTTP Method:** `DELETE`
-- **Success Response (`200 OK`):** Returns refreshed cart object.
-
----
-
-### `DELETE /api/v1/cart`
-Empties all items from the current cart session.
-
-- **Authentication:** Public
-- **HTTP Method:** `DELETE`
-- **Success Response (`200 OK`):** Returns empty cart object.
-
----
-
-## 4. Orders & Checkout Endpoints (Transaction-Safe)
-
-### `POST /api/v1/orders`
-Places an order with database transaction isolation, real-time inventory decrement, and frozen item price snapshots.
-
-- **Authentication:** Public (Guest Session / Token)
-- **HTTP Method:** `POST`
-- **Headers:** `X-Cart-Session: <uuid>`, `Content-Type: application/json`
-- **Request Body (from Cart Session):**
 ```json
 {
   "customer_name": "Rafiqul Islam",
@@ -284,92 +226,34 @@ Places an order with database transaction isolation, real-time inventory decreme
   "notes": "Please call before arrival."
 }
 ```
-- **Request Body (Direct Purchase):**
+- **Response (`201 Created`):**
 ```json
 {
-  "customer_name": "Rafiqul Islam",
-  "customer_phone": "+880 1711-000000",
-  "shipping_address": "House 12, Road 4, Sector 3, Uttara, Dhaka",
-  "payment_method": "cod",
-  "items": [
-    {
-      "product_id": 1,
-      "quantity": 2
-    }
-  ]
-}
-```
-- **Success Response (`201 Created`):**
-```json
-{
-  "success": true,
-  "message": "Order placed successfully",
   "data": {
-    "order_number": "NIES-2026-00001",
+    "order_number": "NIES-20260809-X8K9M2",
     "total_amount": 2900.00,
     "currency": "BDT",
     "payment_method": "cod",
     "payment_status": "unpaid",
     "status": "pending",
     "items_count": 1,
-    "created_at": "2026-08-09T14:04:00+00:00"
-  }
+    "created_at": "2026-08-09T20:38:00+06:00"
+  },
+  "meta": null,
+  "message": "Order placed successfully",
+  "errors": null
 }
 ```
-- **Validation / Stock Error (`422 Unprocessable Entity`):**
-```json
-{
-  "success": false,
-  "message": "Insufficient stock for 'ABC Dry Chemical Powder Extinguisher (6kg)'. Available: 1"
-}
-```
+
+#### `GET /api/v1/orders/{order_number}`
+- **Auth:** Public with Phone Verification Guard (Section 19 / 22)
+- **Query Parameters:** `phone` (optional phone match check)
+- **Response (`200 OK`):** Returns order fulfillment status and frozen snapshot items.
 
 ---
 
-### `GET /api/v1/orders/{order_number}`
-Retrieves public status and frozen historical line items for a placed order.
-
-- **Authentication:** Public
-- **HTTP Method:** `GET`
-- **Query Parameters:** `phone` (optional security verification)
-- **Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "data": {
-    "order_number": "NIES-2026-00001",
-    "customer_name": "Rafiqul Islam",
-    "shipping_address": "House 12, Road 4, Sector 3, Uttara, Dhaka",
-    "subtotal": 2900.00,
-    "shipping_fee": 0.00,
-    "total_amount": 2900.00,
-    "payment_method": "cod",
-    "payment_status": "unpaid",
-    "status": "pending",
-    "created_at": "2026-08-09T14:04:00+00:00",
-    "items": [
-      {
-        "id": 1,
-        "product_title_snapshot": "ABC Dry Chemical Powder Extinguisher (6kg)",
-        "sku_snapshot": "EXT-ABC-6KG",
-        "unit_price_snapshot": "1450.00",
-        "quantity": 2,
-        "line_total": "2900.00"
-      }
-    ]
-  }
-}
-```
-
----
-
-## 5. B2B Project Quotations
-
-### `POST /api/v1/quote-requests`
-Submits a corporate engineering inquiry for custom installations.
-
-- **Authentication:** Public
-- **HTTP Method:** `POST`
+### F. B2B Project Quotations
+#### `POST /api/v1/quote-requests`
 - **Request Body:**
 ```json
 {
@@ -382,55 +266,27 @@ Submits a corporate engineering inquiry for custom installations.
   "notes": "Urgent timeline."
 }
 ```
-- **Success Response (`201 Created`):**
+- **Response (`201 Created`):**
 ```json
 {
-  "success": true,
-  "message": "Quotation request submitted successfully. Our engineering team will contact you shortly.",
   "data": {
     "request_number": "QR-2026-00001",
     "customer_name": "Md. Hasan Ali",
     "service_type": "suppression_system",
     "status": "new",
-    "created_at": "2026-08-09T14:04:00+00:00"
-  }
+    "created_at": "2026-08-09T20:38:00+06:00"
+  },
+  "meta": null,
+  "message": "Quotation request submitted successfully.",
+  "errors": null
 }
 ```
 
 ---
 
-## 6. Brand & Partner Endpoints
-
-### `GET /api/v1/client-logos`
-Retrieves corporate partner logos for the homepage trust carousel.
-
-- **Authentication:** Public
-- **HTTP Method:** `GET`
-- **Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "BRAC University",
-      "logo_path": "/wp-content/uploads/2017/11/bracuni.png",
-      "website_url": "https://www.bracu.ac.bd",
-      "sort_order": 1,
-      "is_active": true
-    }
-  ]
-}
-```
-
----
-
-## 4. Public Content & Contact Endpoints
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/v1/health` | `GET` | Service status heartbeat |
-| `/api/v1/projects` | `GET` | Portfolio engineering projects |
-| `/api/v1/blog` | `GET` | Safety guides & technical articles |
-| `/api/v1/settings` | `GET` | Site contact details, phones, address, PDF profile URL |
-| `/api/v1/contact` | `POST` | Contact form inquiries (Rate-limited: 5 requests/min) |
+### G. Content & Inquiries
+- `GET /api/v1/client-logos`: Partner brand showcase logos for trust carousel.
+- `GET /api/v1/projects`: Portfolio case studies.
+- `GET /api/v1/blog`: Safety articles & guides.
+- `GET /api/v1/settings`: Corporate contact details and downloadable PDF profile URL.
+- `POST /api/v1/contact`: General contact form inquiries (Rate-limited).
