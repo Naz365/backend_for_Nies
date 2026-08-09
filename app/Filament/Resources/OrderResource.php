@@ -102,6 +102,31 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending Review',
+                        'confirmed' => 'Confirmed',
+                        'processing' => 'Processing',
+                        'shipped' => 'Shipped',
+                        'delivered' => 'Delivered',
+                        'cancelled' => 'Cancelled',
+                    ]),
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->options([
+                        'unpaid' => 'Unpaid (COD)',
+                        'paid' => 'Paid',
+                        'failed' => 'Failed',
+                        'refunded' => 'Refunded',
+                    ]),
+                Tables\Filters\SelectFilter::make('payment_method')
+                    ->options([
+                        'cod' => 'Cash on Delivery (COD)',
+                        'sslcommerz' => 'SSLCommerz',
+                        'bkash' => 'bKash',
+                        'nagad' => 'Nagad',
+                    ]),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
