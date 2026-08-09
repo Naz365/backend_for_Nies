@@ -35,7 +35,7 @@ Route::get('/v1/client-logos', [ClientLogoController::class, 'index']);
 // Shopping Cart API endpoints
 Route::get('/v1/cart', [CartController::class, 'show']);
 Route::post('/v1/cart/items', [CartController::class, 'addItem']);
-Route::put('/v1/cart/items/{id}', [CartController::class, 'updateItem']);
+Route::match(['put', 'patch'], '/v1/cart/items/{id}', [CartController::class, 'updateItem']);
 Route::delete('/v1/cart/items/{id}', [CartController::class, 'removeItem']);
 Route::delete('/v1/cart', [CartController::class, 'clearCart']);
 
