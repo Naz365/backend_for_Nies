@@ -19,6 +19,17 @@
 - **Tests:** Static build validation & Filament CRUD tests.
 - **Rollback:** Retain legacy columns; default values prevent breaking changes.
 
+### Entry 01.5: Media Storage
+- **Feature:** Cloud-Native Media Management
+- **Current state:** Local Uploads (`storage/app/public`)
+- **Target state:** Cloudflare R2 / S3-compatible Object Storage + Polymorphic `Media` Model
+- **Files affected:** `backend/config/filesystems.php`, `backend/app/Models/Media.php`
+- **Database affected:** PostgreSQL `media` table.
+- **API affected:** `GET /api/v1/media`
+- **Migration status:** `COMPLETED`
+- **Tests:** Configured filesystems.php disk for Cloudflare R2 and AWS S3 persistent storage with polymorphic Media table.
+- **Rollback:** Revert `FILESYSTEM_DISK` to `public`.
+
 ### Entry 02: Taxonomy & Category Domain
 - **Feature:** Category Taxonomy
 - **Current state:** Dedicated `categories` table with slug uniqueness and product count aggregation.
