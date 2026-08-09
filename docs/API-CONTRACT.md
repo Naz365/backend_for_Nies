@@ -265,7 +265,141 @@ Empties all items from the current cart session.
 
 ---
 
-## 4. Brand & Partner Endpoints
+## 4. Orders & Checkout Endpoints (Transaction-Safe)
+
+### `POST /api/v1/orders`
+Places an order with database transaction isolation, real-time inventory decrement, and frozen item price snapshots.
+
+- **Authentication:** Public (Guest Session / Token)
+- **HTTP Method:** `POST`
+- **Headers:** `X-Cart-Session: <uuid>`, `Content-Type: application/json`
+- **Request Body (from Cart Session):**
+```json
+{
+  "customer_name": "Rafiqul Islam",
+  "customer_phone": "+880 1711-000000",
+  "customer_email": "rafiq@example.com",
+  "shipping_address": "House 12, Road 4, Sector 3, Uttara, Dhaka",
+  "payment_method": "cod",
+  "notes": "Please call before arrival."
+}
+```
+- **Request Body (Direct Purchase):**
+```json
+{
+  "customer_name": "Rafiqul Islam",
+  "customer_phone": "+880 1711-000000",
+  "shipping_address": "House 12, Road 4, Sector 3, Uttara, Dhaka",
+  "payment_method": "cod",
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    }
+  ]
+}
+```
+- **Success Response (`201 Created`):**
+```json
+{
+  "success": true,
+  "message": "Order placed successfully",
+  "data": {
+    "order_number": "NIES-2026-00001",
+    "total_amount": 2900.00,
+    "currency": "BDT",
+    "payment_method": "cod",
+    "payment_status": "unpaid",
+    "status": "pending",
+    "items_count": 1,
+    "created_at": "2026-08-09T14:04:00+00:00"
+  }
+}
+```
+- **Validation / Stock Error (`422 Unprocessable Entity`):**
+```json
+{
+  "success": false,
+  "message": "Insufficient stock for 'ABC Dry Chemical Powder Extinguisher (6kg)'. Available: 1"
+}
+```
+
+---
+
+### `GET /api/v1/orders/{order_number}`
+Retrieves public status and frozen historical line items for a placed order.
+
+- **Authentication:** Public
+- **HTTP Method:** `GET`
+- **Query Parameters:** `phone` (optional security verification)
+- **Success Response (`200 OK`):**
+```json
+{
+  "success": true,
+  "data": {
+    "order_number": "NIES-2026-00001",
+    "customer_name": "Rafiqul Islam",
+    "shipping_address": "House 12, Road 4, Sector 3, Uttara, Dhaka",
+    "subtotal": 2900.00,
+    "shipping_fee": 0.00,
+    "total_amount": 2900.00,
+    "payment_method": "cod",
+    "payment_status": "unpaid",
+    "status": "pending",
+    "created_at": "2026-08-09T14:04:00+00:00",
+    "items": [
+      {
+        "id": 1,
+        "product_title_snapshot": "ABC Dry Chemical Powder Extinguisher (6kg)",
+        "sku_snapshot": "EXT-ABC-6KG",
+        "unit_price_snapshot": "1450.00",
+        "quantity": 2,
+        "line_total": "2900.00"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 5. B2B Project Quotations
+
+### `POST /api/v1/quote-requests`
+Submits a corporate engineering inquiry for custom installations.
+
+- **Authentication:** Public
+- **HTTP Method:** `POST`
+- **Request Body:**
+```json
+{
+  "customer_name": "Md. Hasan Ali",
+  "company_name": "Apex Footwear Ltd.",
+  "phone": "+880 1819-000000",
+  "email": "hasan@apex.com",
+  "service_type": "suppression_system",
+  "project_description": "Requirement for FM-200 gas flooding system in 450 sqft server room.",
+  "notes": "Urgent timeline."
+}
+```
+- **Success Response (`201 Created`):**
+```json
+{
+  "success": true,
+  "message": "Quotation request submitted successfully. Our engineering team will contact you shortly.",
+  "data": {
+    "request_number": "QR-2026-00001",
+    "customer_name": "Md. Hasan Ali",
+    "service_type": "suppression_system",
+    "status": "new",
+    "created_at": "2026-08-09T14:04:00+00:00"
+  }
+}
+```
+
+---
+
+## 6. Brand & Partner Endpoints
 
 ### `GET /api/v1/client-logos`
 Retrieves corporate partner logos for the homepage trust carousel.

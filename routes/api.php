@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ClientLogoController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\QuoteRequestController;
 
 Route::get('/ping', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
@@ -36,6 +38,13 @@ Route::post('/v1/cart/items', [CartController::class, 'addItem']);
 Route::put('/v1/cart/items/{id}', [CartController::class, 'updateItem']);
 Route::delete('/v1/cart/items/{id}', [CartController::class, 'removeItem']);
 Route::delete('/v1/cart', [CartController::class, 'clearCart']);
+
+// Orders & Checkout API endpoints
+Route::post('/v1/orders', [OrderController::class, 'store']);
+Route::get('/v1/orders/{order_number}', [OrderController::class, 'show']);
+
+// B2B Quote Requests
+Route::post('/v1/quote-requests', [QuoteRequestController::class, 'store']);
 
 Route::get('/v1/projects', [ProjectController::class, 'index']);
 Route::get('/v1/blog', [BlogPostController::class, 'index']);
