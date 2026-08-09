@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ClientLogoController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\QuoteRequestController;
+use App\Http\Controllers\Api\ServiceRequestController;
 
 Route::get('/ping', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
@@ -45,6 +46,10 @@ Route::get('/v1/orders/{order_number}', [OrderController::class, 'show']);
 
 // B2B Quote Requests
 Route::post('/v1/quote-requests', [QuoteRequestController::class, 'store']);
+
+// Field Service & Maintenance Requests
+Route::post('/v1/service-requests', [ServiceRequestController::class, 'store']);
+Route::get('/v1/service-requests/{request_number}', [ServiceRequestController::class, 'show']);
 
 Route::get('/v1/projects', [ProjectController::class, 'index']);
 Route::get('/v1/blog', [BlogPostController::class, 'index']);
