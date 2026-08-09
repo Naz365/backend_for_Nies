@@ -11,21 +11,11 @@ Route::get('/ping', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
 });
 
-Route::get('/v1/cms-status', function () {
+Route::get('/v1/health', function () {
     return response()->json([
-        'status' => 'online',
-        'portal' => 'N.I. Engineering Services CMS Portal',
-        'admin_credentials' => [
-            'email' => 'admin@niengineeringbd.com',
-            'password' => 'password123'
-        ],
-        'endpoints' => [
-            'projects' => '/api/v1/projects',
-            'products' => '/api/v1/products',
-            'blog' => '/api/v1/blog',
-            'settings' => '/api/v1/settings',
-            'contact' => '/api/v1/contact [POST]',
-        ]
+        'status' => 'healthy',
+        'timestamp' => now()->toIso8601String(),
+        'service' => 'N.I. Engineering API'
     ]);
 });
 

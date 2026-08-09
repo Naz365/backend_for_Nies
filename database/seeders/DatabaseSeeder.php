@@ -15,12 +15,15 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 0. Administrator Account
+        // 0. Administrator Account (Secure fallback or injected from environment)
+        $adminEmail = env('ADMIN_EMAIL', 'admin@niengineeringbd.com');
+        $adminPassword = env('ADMIN_DEFAULT_PASSWORD', 'AdminSecure#NIES2026!');
+        
         User::updateOrCreate(
-            ['email' => 'admin@niengineeringbd.com'],
+            ['email' => $adminEmail],
             [
                 'name' => 'N.I. Administrator',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make($adminPassword),
             ]
         );
 
