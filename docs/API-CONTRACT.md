@@ -172,7 +172,100 @@ Retrieves complete product details for individual product view.
 
 ---
 
-## 3. Brand & Partner Endpoints
+## 3. Shopping Cart Endpoints (Server-Authoritative)
+
+### Session Header Requirement
+All Cart API requests accept an optional `X-Cart-Session` header containing a UUID token. If omitted, the server automatically generates one and returns it in the response payload.
+
+### `GET /api/v1/cart`
+Retrieves current shopping cart, items, live product prices, and calculated subtotal.
+
+- **Authentication:** Public (Guest Session / Token)
+- **HTTP Method:** `GET`
+- **Headers:** `X-Cart-Session: <uuid>`
+- **Success Response (`200 OK`):**
+```json
+{
+  "success": true,
+  "data": {
+    "cart_id": 12,
+    "session_token": "nies_guest_9f8d1e2a",
+    "items": [
+      {
+        "id": 4,
+        "product_id": 1,
+        "title": "ABC Dry Chemical Powder Extinguisher (6kg)",
+        "slug": "abc-dry-powder-extinguisher-6kg",
+        "image": "/wp-content/uploads/2017/05/fire-extinguishers1.jpg",
+        "unit_price": 1450.00,
+        "quantity": 2,
+        "line_total": 2900.00,
+        "stock_quantity": 100,
+        "in_stock": true
+      }
+    ],
+    "item_count": 2,
+    "subtotal": 2900.00,
+    "currency": "BDT"
+  }
+}
+```
+
+---
+
+### `POST /api/v1/cart/items`
+Adds an item to the shopping cart. Server enforces inventory limits and validates price.
+
+- **Authentication:** Public
+- **HTTP Method:** `POST`
+- **Headers:** `X-Cart-Session: <uuid>`, `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "product_id": 1,
+  "quantity": 1
+}
+```
+- **Success Response (`200 OK`):** Returns refreshed cart object.
+- **Stock Error (`422 Unprocessable Entity`):**
+```json
+{
+  "success": false,
+  "message": "Insufficient stock. Only 5 units available."
+}
+```
+
+---
+
+### `PUT /api/v1/cart/items/{id}`
+Updates the quantity of an item in the cart. If quantity is `0`, item is removed.
+
+- **Authentication:** Public
+- **HTTP Method:** `PUT`
+- **Request Body:** `{"quantity": 3}`
+- **Success Response (`200 OK`):** Returns refreshed cart object.
+
+---
+
+### `DELETE /api/v1/cart/items/{id}`
+Removes a specific line item from the cart.
+
+- **Authentication:** Public
+- **HTTP Method:** `DELETE`
+- **Success Response (`200 OK`):** Returns refreshed cart object.
+
+---
+
+### `DELETE /api/v1/cart`
+Empties all items from the current cart session.
+
+- **Authentication:** Public
+- **HTTP Method:** `DELETE`
+- **Success Response (`200 OK`):** Returns empty cart object.
+
+---
+
+## 4. Brand & Partner Endpoints
 
 ### `GET /api/v1/client-logos`
 Retrieves corporate partner logos for the homepage trust carousel.
