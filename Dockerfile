@@ -1,14 +1,15 @@
 FROM php:8.3-apache
 
-# Install system dependencies & PHP extensions required by Laravel 12 & Filament v3
+# Install system dependencies & PHP extensions required by Laravel 12, Filament v3 & PostgreSQL
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libzip-dev \
+    libpq-dev \
     zip \
     unzip \
     sqlite3 \
     libsqlite3-dev \
-    && docker-php-ext-install intl pdo pdo_sqlite zip bcmath
+    && docker-php-ext-install intl pdo pdo_sqlite pdo_pgsql zip bcmath
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
