@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
-use App\Models\Customer;
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Payment;
-use App\Models\Product;
+use App\Services\CheckoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+    protected CheckoutService $checkoutService;
+
+    public function __construct(CheckoutService $checkoutService)
+    {
+        $this->checkoutService = $checkoutService;
+    }
+
     /**
      * POST /api/v1/orders
-     * Places a server-authoritative order with transaction safety and stock decrement
+     * Places a server-authoritative order via CheckoutService
      */
     public function store(Request $request): JsonResponse
     {
@@ -34,136 +36,8 @@ class OrderController extends Controller
         ]);
 
         try {
-            $order = DB::transaction(function () use ($request, $validated) {
-                // 1. Resolve Cart or Direct Items
-                $sessionToken = $request->header('X-Cart-Session') ?? $request->input('session_token');
-                $cart = $sessionToken ? Cart::where('session_token', $sessionToken)->where('status', 'active')->first() : null;
-
-                $orderItemsData = [];
-                $subtotal = 0;
-
-                if (!empty($validated['items'])) {
-                    // Direct item payload checkout
-                    foreach ($validated['items'] as $itemInput) {
-                        $product = Product::lockForUpdate()->findOrFail($itemInput['product_id']);
-                        $qty = (int) $itemInput['quantity'];
-
-                        if ($product->track_inventory && $product->stock_quantity < $qty) {
-                            throw new \Exception("Insufficient stock for '{$product->title}'. Available: {$product->stock_quantity}");
-                        }
-
-                        $unitPrice = (float) $product->price;
-                        $lineTotal = round($unitPrice * $qty, 2);
-                        $subtotal += $lineTotal;
-
-                        // Decrement stock
-                        if ($product->track_inventory) {
-                            $product->decrement('stock_quantity', $qty);
-                        }
-
-                        $orderItemsData[] = [
-                            'product_id' => $product->id,
-                            'product_title_snapshot' => $product->title,
-                            'sku_snapshot' => $product->sku,
-                            'unit_price_snapshot' => $unitPrice,
-                            'quantity' => $qty,
-                            'line_total' => $lineTotal,
-                        ];
-                    }
-                } elseif ($cart && $cart->items()->count() > 0) {
-                    // Checkout from existing session cart
-                    foreach ($cart->items as $cartItem) {
-                        $product = Product::lockForUpdate()->find($cartItem->product_id);
-                        if (!$product || $product->status !== 'published') {
-                            continue;
-                        }
-
-                        $qty = (int) $cartItem->quantity;
-                        if ($product->track_inventory && $product->stock_quantity < $qty) {
-                            throw new \Exception("Insufficient stock for '{$product->title}'. Available: {$product->stock_quantity}");
-                        }
-
-                        $unitPrice = (float) $product->price;
-                        $lineTotal = round($unitPrice * $qty, 2);
-                        $subtotal += $lineTotal;
-
-                        // Decrement stock
-                        if ($product->track_inventory) {
-                            $product->decrement('stock_quantity', $qty);
-                        }
-
-                        $orderItemsData[] = [
-                            'product_id' => $product->id,
-                            'product_title_snapshot' => $product->title,
-                            'sku_snapshot' => $product->sku,
-                            'unit_price_snapshot' => $unitPrice,
-                            'quantity' => $qty,
-                            'line_total' => $lineTotal,
-                        ];
-                    }
-                } else {
-                    throw new \Exception("Cannot place order with an empty cart.");
-                }
-
-                if (empty($orderItemsData)) {
-                    throw new \Exception("No valid items found in order.");
-                }
-
-                // 2. Find or Create Customer
-                $customer = Customer::firstOrCreate(
-                    ['phone' => $validated['customer_phone']],
-                    [
-                        'name' => $validated['customer_name'],
-                        'email' => $validated['customer_email'] ?? null,
-                    ]
-                );
-
-                // 3. Create Order Record
-                $paymentMethod = $validated['payment_method'] ?? 'cod';
-                $shippingFee = 0.00;
-                $discountAmount = 0.00;
-                $totalAmount = round($subtotal + $shippingFee - $discountAmount, 2);
-
-                $order = Order::create([
-                    'order_number' => Order::generateOrderNumber(),
-                    'customer_id' => $customer->id,
-                    'customer_name' => $validated['customer_name'],
-                    'customer_email' => $validated['customer_email'] ?? null,
-                    'customer_phone' => $validated['customer_phone'],
-                    'shipping_address' => $validated['shipping_address'],
-                    'subtotal' => $subtotal,
-                    'shipping_fee' => $shippingFee,
-                    'discount_amount' => $discountAmount,
-                    'total_amount' => $totalAmount,
-                    'payment_method' => $paymentMethod,
-                    'payment_status' => $paymentMethod === 'cod' ? 'unpaid' : 'pending',
-                    'status' => 'pending',
-                    'notes' => $validated['notes'] ?? null,
-                ]);
-
-                // 4. Create Frozen Order Items Snapshots
-                foreach ($orderItemsData as $item) {
-                    $order->items()->create($item);
-                }
-
-                // 5. Create Initial Payment Record
-                Payment::create([
-                    'order_id' => $order->id,
-                    'payment_method' => $paymentMethod,
-                    'gateway' => $paymentMethod === 'cod' ? 'manual_cod' : $paymentMethod,
-                    'amount' => $totalAmount,
-                    'currency' => 'BDT',
-                    'status' => $paymentMethod === 'cod' ? 'pending' : 'pending',
-                ]);
-
-                // 6. Close Cart
-                if ($cart) {
-                    $cart->update(['status' => 'converted']);
-                    $cart->items()->delete();
-                }
-
-                return $order;
-            });
+            $sessionToken = $request->header('X-Cart-Session') ?? $request->input('session_token');
+            $order = $this->checkoutService->placeOrder($validated, $sessionToken);
 
             $order->load('items');
 
@@ -191,21 +65,28 @@ class OrderController extends Controller
 
     /**
      * GET /api/v1/orders/{order_number}
-     * Public order tracking endpoint
+     * Public order tracking endpoint with phone number verification (Section 22 Security Rule)
      */
     public function show(string $orderNumber, Request $request): JsonResponse
     {
+        $request->validate([
+            'phone' => 'nullable|string',
+        ]);
+
         try {
             $order = Order::where('order_number', $orderNumber)
                 ->with(['items:id,order_id,product_title_snapshot,sku_snapshot,unit_price_snapshot,quantity,line_total'])
                 ->firstOrFail();
 
-            // Optional security phone verification if provided
+            // Security check: If phone is passed, verify match; otherwise mask sensitive info
             if ($request->filled('phone')) {
-                if (trim($order->customer_phone) !== trim($request->input('phone'))) {
+                $cleanInput = preg_replace('/[^0-9]/', '', $request->input('phone'));
+                $cleanDb = preg_replace('/[^0-9]/', '', $order->customer_phone);
+
+                if (!str_ends_with($cleanDb, substr($cleanInput, -8))) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Phone number does not match order record',
+                        'message' => 'Phone number does not match order record.',
                     ], 403);
                 }
             }
@@ -229,7 +110,7 @@ class OrderController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
+                'message' => 'Order record not found',
             ], 404);
         }
     }

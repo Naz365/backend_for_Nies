@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -52,6 +53,11 @@ class Order extends Model
 
     public static function generateOrderNumber(): string
     {
-        return 'NIES-' . date('Y') . '-' . str_pad((string) (static::whereYear('created_at', date('Y'))->count() + 1), 5, '0', STR_PAD_LEFT);
+        do {
+            $randomSuffix = strtoupper(Str::random(6));
+            $candidate = 'NIES-' . date('Ymd') . '-' . $randomSuffix;
+        } while (static::where('order_number', $candidate)->exists());
+
+        return $candidate;
     }
 }
