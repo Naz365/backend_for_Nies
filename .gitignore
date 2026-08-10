@@ -10,6 +10,8 @@
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/logs/*
+/bootstrap/cache/*.php
 /database/database.sqlite
+/database/database.sqlite-journal
 .DS_Store
 Thumbs.db
