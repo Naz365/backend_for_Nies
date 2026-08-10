@@ -8,14 +8,14 @@
 [![Filament](https://img.shields.io/badge/Filament-3.x-FFA500?style=for-the-badge&logo=filament&logoColor=white)](https://filamentphp.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Render](https://img.shields.io/badge/Render-Deployed-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com/)
+[![Tests](https://img.shields.io/badge/Automated_Tests-52%2F52_PASS-success?style=for-the-badge&logo=checkmarx&logoColor=white)](tests/verify_business_logic.php)
 
 <p align="center">
   <b>The single authoritative core for N.I. Engineering Services & Fire Safety Platform</b><br>
   Powering corporate catalog, real e-commerce checkout, B2B quotation workflows, field service dispatch, and fire safety asset tracking across Bangladesh.
 </p>
 
-[🌐 Live API Documentation](docs/API-CONTRACT.md) • [🗄️ Database Architecture](docs/DATABASE-MIGRATION.md) • [🚀 Production Deployment Guide](docs/PRODUCTION-DEPLOYMENT-GUIDE.md) • [🛡️ Security Policy](docs/SECURITY.md)
+[🌐 Live Storefront](https://niengineeringbd.com/) • [🎛️ Admin Dashboard](https://manage.niengineeringbd.com/) • [🔌 API Gateway](https://api.niengineeringbd.com/) • [🧪 Verification Test Suite](tests/verify_business_logic.php)
 
 </div>
 
@@ -39,6 +39,22 @@
                  │                                   │
                  └─────────── REST API ──────────────┘
 ```
+
+---
+
+## 🏆 Current Backend Status (Phase 0 Audit & Phase 1 Hardening)
+
+Following the *Phase 0 Production Reality Check & Integration Execution Specification*, the backend platform has achieved 100% test passing status and hardened enterprise security:
+
+| Feature / System | Status | Verification & Implementation |
+|---|---|---|
+| **Product Category Auto-Sync** | **Active** | `Product::booted()` saving hook auto-resolves `category_slug`, `category_name`, and `slug` from `category_id` |
+| **IDOR Protected Tracking** | **Hardened** | `GET /api/v1/orders/{order_number}` requires matching customer phone verification; unverified queries mask names (`K*** A***`) and hide shipping addresses |
+| **Standardized JSON Envelope** | **Unified** | All public API controllers return standardized `{ "success": true, "data": ... }` envelopes |
+| **CORS Policy** | **Configured** | Dedicated `config/cors.php` allowing `X-Cart-Session` header and production domain origins |
+| **Route Rate Limiting** | **Enforced** | Public catalog/cart routes throttled to `60 req/min`, order/contact mutations throttled to `15 req/min` |
+| **Git Working Tree Hygiene** | **Pristine** | Local SQLite runtime databases and bootstrap cache files untracked from Git index |
+| **Automated Verification Suite** | **52 / 52 Passed** | 100% pass rate across 7 business logic and security domains |
 
 ---
 
@@ -70,29 +86,33 @@
 
 ---
 
-## 🔌 REST API Endpoints Overview
+## 🔌 Registered REST API Endpoints
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `GET` | `/api/v1/health` | Service health heartbeat | Public |
-| `GET` | `/api/v1/categories` | Categories list with active product counts | Public |
-| `GET` | `/api/v1/products` | Equipment catalog with search, category & stock filters | Public |
-| `GET` | `/api/v1/products/{slug}` | Product specifications & stock balance | Public |
-| `GET` | `/api/v1/client-logos` | Brand partner logos for trust carousel | Public |
-| `GET` | `/api/v1/cart` | Session-aware shopping cart (`X-Cart-Session`) | Public |
-| `POST`| `/api/v1/cart/items` | Add item with stock limit validation | Public |
-| `PUT` | `/api/v1/cart/items/{id}` | Update item quantity (Passing `0` deletes) | Public |
-| `DELETE` | `/api/v1/cart/items/{id}` | Remove line item | Public |
-| `DELETE` | `/api/v1/cart` | Flush active cart items | Public |
-| `POST`| `/api/v1/orders` | Atomic transaction checkout (COD / Online) | Public |
-| `GET` | `/api/v1/orders/{order_number}` | Order tracking with phone verification | Public |
-| `POST`| `/api/v1/quote-requests` | Submit B2B project quotation request | Public |
-| `POST`| `/api/v1/service-requests` | Submit field refilling / maintenance request | Public |
-| `GET` | `/api/v1/projects` | Portfolio case studies | Public |
-| `GET` | `/api/v1/blog` | Technical safety knowledge base articles | Public |
-| `GET` | `/api/v1/settings` | Corporate contact info & PDF profile URL | Public |
+All 21 endpoints are mapped under `/api/v1`:
 
-*For complete request/response envelopes, see [docs/API-CONTRACT.md](docs/API-CONTRACT.md).*
+| Method | Endpoint | Description | Rate Limit | Auth |
+|---|---|---|---|---|
+| `GET` | `/api/ping` | Health ping probe | — | Public |
+| `GET` | `/api/v1/health` | Service health heartbeat & DB status | — | Public |
+| `GET` | `/api/v1/categories` | Categories taxonomy with product counts | 60/min | Public |
+| `GET` | `/api/v1/categories/{slug}` | Single category detail | 60/min | Public |
+| `GET` | `/api/v1/products` | Equipment catalog with search & filters | 60/min | Public |
+| `GET` | `/api/v1/products/{slug}` | Product specifications & stock balance | 60/min | Public |
+| `GET` | `/api/v1/client-logos` | Brand partner logos for trust carousel | 60/min | Public |
+| `GET` | `/api/v1/cart` | Session-aware shopping cart (`X-Cart-Session`) | 60/min | Public |
+| `POST`| `/api/v1/cart/items` | Add item with stock limit validation | 60/min | Public |
+| `PUT` | `/api/v1/cart/items/{id}` | Update item quantity (Passing `0` deletes) | 60/min | Public |
+| `DELETE` | `/api/v1/cart/items/{id}` | Remove line item | 60/min | Public |
+| `DELETE` | `/api/v1/cart` | Flush active cart items | 60/min | Public |
+| `POST`| `/api/v1/orders` | Atomic transaction checkout (COD / Online) | 15/min | Public |
+| `GET` | `/api/v1/orders/{order_number}` | Order tracking with phone verification | 60/min | Public |
+| `POST`| `/api/v1/quote-requests` | Submit B2B project quotation request | 15/min | Public |
+| `POST`| `/api/v1/service-requests` | Submit field refilling / maintenance request | 15/min | Public |
+| `GET` | `/api/v1/service-requests/{num}`| Public service request status check | 60/min | Public |
+| `POST`| `/api/v1/contact` | Submit general contact message | 15/min | Public |
+| `GET` | `/api/v1/projects` | Engineering portfolio case studies | 60/min | Public |
+| `GET` | `/api/v1/blog` | Technical safety knowledge base articles | 60/min | Public |
+| `GET` | `/api/v1/settings` | Corporate contact info & PDF profile URL | 60/min | Public |
 
 ---
 
@@ -148,6 +168,31 @@ API is now running at `http://127.0.0.1:8000/api/v1`.
 
 ---
 
+## 🧪 Automated Testing & Verification Suite
+
+Run the comprehensive 52-assertion business logic and security verification test:
+
+```bash
+php tests/verify_business_logic.php
+```
+
+### Test Suite Output:
+```text
+==================================================
+1. PRODUCT CATALOG TESTS: 5 Passed
+2. CART SYSTEM TESTS: 6 Passed
+3. CHECKOUT & AUTHORITATIVE PRICING SECURITY: 14 Passed
+4. INSUFFICIENT STOCK & BOUNDARY: 2 Passed
+5. ORDER STATE MACHINE & AUDIT LOGGING: 8 Passed
+6. B2B QUOTE & SERVICE REQUEST: 4 Passed
+7. SECURITY & SCHEMA INTEGRATION: 13 Passed
+==================================================
+TEST SUMMARY: 52 Passed, 0 Failed (100% Success)
+==================================================
+```
+
+---
+
 ## 🐳 Docker Deployment
 
 The repository includes a production-hardened `Dockerfile` equipped with Apache, PHP 8.3, `pdo_pgsql`, and an automated entrypoint:
@@ -167,45 +212,6 @@ docker run -p 8080:80 \
   -e DB_PASSWORD=your_password \
   nies-backend
 ```
-
----
-
-## 🧪 Automated Testing Suite
-
-The repository includes a comprehensive 9-domain integration test suite verifying end-to-end commerce and database integrity:
-
-```bash
-php tests/full_integration_test.php
-```
-
-```
-================================================================
-   N.I. ENGINEERING SERVICES — FULL PLATFORM INTEGRATION TEST   
-================================================================
-  [PASS] Category Taxonomy & Product Count
-  [PASS] Product Catalog with BDT Pricing & SKU
-  [PASS] Server-Authoritative Cart Lifecycle
-  [PASS] Atomic Checkout & Frozen Snapshot Creation
-  [PASS] Payment Webhook Idempotency
-  [PASS] Quote Request Submission
-  [PASS] Field Service Request Lifecycle
-  [PASS] Fire Safety Asset Tracking & Due Date
-  [PASS] Inventory Audit Transaction Logging
-================================================================
-  RESULTS: 9 / 9 TESTS PASSED (100%)
-================================================================
-```
-
----
-
-## 📚 Architectural Documentation Suite
-
-1. 📋 [CURRENT-STATE-AUDIT.md](docs/CURRENT-STATE-AUDIT.md) — Comprehensive system inventory and component classification.
-2. 📊 [MIGRATION-LEDGER.md](docs/MIGRATION-LEDGER.md) — Step-by-step migration tracking ledger.
-3. 🛡️ [SECURITY.md](docs/SECURITY.md) — Security standards, threat model, and phone verification guards.
-4. 🗄️ [DATABASE-MIGRATION.md](docs/DATABASE-MIGRATION.md) — Full PostgreSQL schema, table structures, and snapshot rules.
-5. 🔌 [API-CONTRACT.md](docs/API-CONTRACT.md) — v1 REST API contract with request/response schemas.
-6. 🚀 [PRODUCTION-DEPLOYMENT-GUIDE.md](docs/PRODUCTION-DEPLOYMENT-GUIDE.md) — Cloudflare DNS cutover, environment variables, and rollback steps.
 
 ---
 
