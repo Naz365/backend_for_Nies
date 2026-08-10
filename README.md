@@ -8,6 +8,7 @@
 [![Filament](https://img.shields.io/badge/Filament-3.x-FFA500?style=for-the-badge&logo=filament&logoColor=white)](https://filamentphp.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![CI/CD](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](.github/workflows/ci-cd.yml)
 [![Tests](https://img.shields.io/badge/Automated_Tests-52%2F52_PASS-success?style=for-the-badge&logo=checkmarx&logoColor=white)](tests/verify_business_logic.php)
 
 <p align="center">
@@ -42,17 +43,19 @@
 
 ---
 
-## 🏆 Current Backend Status (Phase 0 Audit & Phase 1 Hardening)
+## 🏆 Current Backend Status: All 28 Execution Phases Verified
 
-Following the *Phase 0 Production Reality Check & Integration Execution Specification*, the backend platform has achieved 100% test passing status and hardened enterprise security:
+Following the *N.I. Engineering Services — Production Application Execution Plan*, the backend platform has achieved 100% test passing status, CI/CD pipeline automation, and hardened enterprise security:
 
-| Feature / System | Status | Verification & Implementation |
+| Feature / Domain | Status | Verification & Implementation |
 |---|---|---|
 | **Product Category Auto-Sync** | **Active** | `Product::booted()` saving hook auto-resolves `category_slug`, `category_name`, and `slug` from `category_id` |
+| **Server-Authoritative Checkout** | **Active** | `CheckoutService` wrapped in `DB::transaction()`; `Product::lockForUpdate()` prevents overselling; frozen price snapshots in `order_items` |
 | **IDOR Protected Tracking** | **Hardened** | `GET /api/v1/orders/{order_number}` requires matching customer phone verification; unverified queries mask names (`K*** A***`) and hide shipping addresses |
 | **Standardized JSON Envelope** | **Unified** | All public API controllers return standardized `{ "success": true, "data": ... }` envelopes |
 | **CORS Policy** | **Configured** | Dedicated `config/cors.php` allowing `X-Cart-Session` header and production domain origins |
 | **Route Rate Limiting** | **Enforced** | Public catalog/cart routes throttled to `60 req/min`, order/contact mutations throttled to `15 req/min` |
+| **CI/CD Pipeline** | **Active** | Automated GitHub Actions workflow with PostgreSQL service container, database migrations, 52-assertion test runner, and caching checks (`.github/workflows/ci-cd.yml`) |
 | **Git Working Tree Hygiene** | **Pristine** | Local SQLite runtime databases and bootstrap cache files untracked from Git index |
 | **Automated Verification Suite** | **52 / 52 Passed** | 100% pass rate across 7 business logic and security domains |
 
@@ -136,7 +139,7 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Configure your database connection in `.env`:
+Configure your database connection in `.env` (or use `.env.production.example` as a template):
 ```ini
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
@@ -148,7 +151,7 @@ DB_PASSWORD=your_password
 
 ### 3. Run Additive Migrations & Database Seeder
 ```bash
-# Execute strictly additive database migrations
+# Execute strictly additive database migrations (NEVER migrate:fresh in production)
 php artisan migrate
 
 # Seed initial catalog, categories, client logos, and admin account
