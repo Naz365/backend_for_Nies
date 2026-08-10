@@ -11,6 +11,22 @@ class Product extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::saving(function (Product $product) {
+            if (empty($product->category_slug) && $product->category_id) {
+                $category = $product->category ?? Category::find($product->category_id);
+                if ($category) {
+                    $product->category_slug = $category->slug;
+                    $product->category_name = $category->name;
+                }
+            }
+            if (empty($product->slug) && !empty($product->title)) {
+                $product->slug = \Illuminate\Support\Str::slug($product->title);
+            }
+        });
+    }
+
     protected $fillable = [
         'category_id',
         'title',

@@ -78,12 +78,14 @@ class OrderController extends Controller
                 ->with(['items:id,order_id,product_title_snapshot,sku_snapshot,unit_price_snapshot,quantity,line_total'])
                 ->firstOrFail();
 
-            // Security check: If phone is passed, verify match; otherwise mask sensitive info
+            $isVerified = false;
             if ($request->filled('phone')) {
                 $cleanInput = preg_replace('/[^0-9]/', '', $request->input('phone'));
                 $cleanDb = preg_replace('/[^0-9]/', '', $order->customer_phone);
 
-                if (!str_ends_with($cleanDb, substr($cleanInput, -8))) {
+                if (str_ends_with($cleanDb, substr($cleanInput, -8))) {
+                    $isVerified = true;
+                } else {
                     return response()->json([
                         'success' => false,
                         'message' => 'Phone number does not match order record.',
@@ -91,20 +93,42 @@ class OrderController extends Controller
                 }
             }
 
+            if ($isVerified) {
+                // Full details for verified customer
+                return response()->json([
+                    'success' => true,
+                    'is_verified' => true,
+                    'data' => [
+                        'order_number' => $order->order_number,
+                        'customer_name' => $order->customer_name,
+                        'customer_phone' => $order->customer_phone,
+                        'shipping_address' => $order->shipping_address,
+                        'subtotal' => (float) $order->subtotal,
+                        'shipping_fee' => (float) $order->shipping_fee,
+                        'total_amount' => (float) $order->total_amount,
+                        'payment_method' => $order->payment_method,
+                        'payment_status' => $order->payment_status,
+                        'status' => $order->status,
+                        'created_at' => $order->created_at->toIso8601String(),
+                        'items' => $order->items,
+                    ],
+                ]);
+            }
+
+            // Masked summary for unverified public queries
+            $maskedName = mb_substr($order->customer_name, 0, 1) . '*** ' . mb_substr(strrchr($order->customer_name, ' ') ?: $order->customer_name, 0, 2) . '***';
             return response()->json([
                 'success' => true,
+                'is_verified' => false,
                 'data' => [
                     'order_number' => $order->order_number,
-                    'customer_name' => $order->customer_name,
-                    'shipping_address' => $order->shipping_address,
-                    'subtotal' => (float) $order->subtotal,
-                    'shipping_fee' => (float) $order->shipping_fee,
-                    'total_amount' => (float) $order->total_amount,
+                    'customer_name' => trim($maskedName),
+                    'status' => $order->status,
                     'payment_method' => $order->payment_method,
                     'payment_status' => $order->payment_status,
-                    'status' => $order->status,
+                    'items_count' => $order->items->count(),
                     'created_at' => $order->created_at->toIso8601String(),
-                    'items' => $order->items,
+                    'message' => 'Provide order phone number to view full recipient and address details.',
                 ],
             ]);
         } catch (\Throwable $e) {

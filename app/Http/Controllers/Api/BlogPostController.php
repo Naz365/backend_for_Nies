@@ -11,10 +11,17 @@ class BlogPostController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $posts = BlogPost::where('status', 'published')->get();
-            return response()->json(['data' => $posts]);
+            $posts = BlogPost::where('status', 'published')->orderBy('published_at', 'desc')->get();
+            return response()->json([
+                'success' => true,
+                'data' => $posts,
+            ]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve blog posts',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
     }
 }

@@ -12,9 +12,16 @@ class SiteSettingController extends Controller
     {
         try {
             $settings = SiteSetting::all()->pluck('value', 'key');
-            return response()->json(['data' => $settings]);
+            return response()->json([
+                'success' => true,
+                'data' => $settings,
+            ]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve site settings',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
     }
 }

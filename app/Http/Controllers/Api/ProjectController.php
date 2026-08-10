@@ -10,7 +10,18 @@ class ProjectController extends Controller
 {
     public function index(): JsonResponse
     {
-        $projects = Project::where('status', 'published')->get();
-        return response()->json(['data' => $projects]);
+        try {
+            $projects = Project::where('status', 'published')->get();
+            return response()->json([
+                'success' => true,
+                'data' => $projects,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve projects',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 }
