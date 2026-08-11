@@ -17,7 +17,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', 'https://niengineeringbd.com,https://manage.niengineeringbd.com,http://localhost:4321,http://localhost:8080,http://127.0.0.1:4321'))),
+    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', 'https://niengineeringbd.com,https://www.niengineeringbd.com,https://manage.niengineeringbd.com,http://localhost:4321,http://localhost:8080,http://127.0.0.1:4321'))),
 
     'allowed_origins_patterns' => [],
 
